@@ -136,6 +136,7 @@ class NegInfinityClass(IntervalInt):
         return "-\u221E"
 
 
+ZERO_INT = IntervalInt(0)
 INFINITY = InfinityClass()
 NEG_INFINITY = NegInfinityClass()
 
@@ -147,13 +148,15 @@ class Interval(object):
         assert not isinstance(begin, NegInfinityClass) or not isinstance(end, NegInfinityClass)
 
         self.begin = IntervalInt(begin) if isinstance(begin, int) else begin
+
         if end is not None:
             assert isinstance(end, (int, IntervalInt))
-            assert begin <= end
             self.end = IntervalInt(end) if isinstance(end, int) else end
         else:
             assert not isinstance(begin, (InfinityClass, NegInfinityClass))
             self.end = self.begin
+
+        assert self.begin <= self.end
 
     def debug_checks(self, other):
         assert isinstance(other, Interval)
@@ -180,11 +183,25 @@ class Interval(object):
         return self.begin != other.begin or self.end != other.end
 
     def __floordiv__(self, other):
-        # TODO: Ignore divide by zero
         self.debug_checks(other)
-        assert IntervalInt(0) < other.begin or other.end < IntervalInt(0)
+        if ZERO == other:
+            raise ZeroDivisionError()
+        if ZERO_INT == other.begin:
+            return self // Interval(1, other.end)
+        if ZERO_INT == other.end:
+            return self // Interval(other.begin, -1)
+        if other.begin < ZERO_INT < other.end:
+            return (self // Interval(other.begin, -1)).join(self // Interval(1, other.end))
         results = list(getattr(a, "__floordiv__")(b) for a in self for b in other)
         return Interval(min(results), max(results))
+
+    def join(self, other):
+        self.debug_checks(other)
+        return Interval(min(self.begin, other.begin), max(self.end, other.end))
+
+
+ZERO = Interval(ZERO_INT)
+TOP = Interval(NEG_INFINITY, INFINITY)
 
 
 def get_method(m):

@@ -1,4 +1,4 @@
-from pyflakes.interval import Interval, INFINITY, NEG_INFINITY
+from pyflakes.interval import Interval, INFINITY, NEG_INFINITY, TOP
 from pyflakes.test.harness import TestCase
 
 
@@ -18,10 +18,7 @@ class TestInterval(TestCase):
         self.assertEqual(Interval(1) + Interval(NEG_INFINITY, 0), Interval(NEG_INFINITY, 1))
 
     def test_plus_top(self):
-        self.assertEqual(
-            Interval(NEG_INFINITY, INFINITY) + Interval(NEG_INFINITY, INFINITY),
-            Interval(NEG_INFINITY, INFINITY)
-        )
+        self.assertEqual(TOP + TOP, TOP)
 
     def test_minus(self):
         self.assertEqual(Interval(-10, 1) - Interval(-1, 2), Interval(-12, 2))
@@ -37,24 +34,21 @@ class TestInterval(TestCase):
         self.assertEqual(Interval(-10, 1) - Interval(NEG_INFINITY, 2), Interval(-12, INFINITY))
         self.assertEqual(Interval(-10, 1) - Interval(-1, INFINITY), Interval(NEG_INFINITY, 2))
         self.assertEqual(Interval(0, INFINITY) - Interval(NEG_INFINITY, 0), Interval(0, INFINITY))
-        self.assertEqual(Interval(2) - Interval(NEG_INFINITY, INFINITY), Interval(NEG_INFINITY, INFINITY))
-        self.assertEqual(Interval(NEG_INFINITY, INFINITY) - Interval(2), Interval(NEG_INFINITY, INFINITY))
+        self.assertEqual(Interval(2) - TOP, TOP)
+        self.assertEqual(TOP - Interval(2), TOP)
         self.assertEqual(Interval(1) - Interval(0, INFINITY), Interval(NEG_INFINITY, 1))
         self.assertEqual(Interval(1) - Interval(NEG_INFINITY, 0), Interval(1, INFINITY))
 
     def test_minus_infinity_top(self):
-        self.assertEqual(
-            Interval(NEG_INFINITY, INFINITY) - Interval(NEG_INFINITY, INFINITY),
-            Interval(NEG_INFINITY, INFINITY)
-        )
+        self.assertEqual(TOP - TOP, TOP)
 
     def test_mul(self):
         self.assertEqual(Interval(-10, 1) * Interval(-1, 2), Interval(-20, 10))
         self.assertEqual(Interval(1) * Interval(2), Interval(2))
 
     def test_mul_infinity_simple(self):
-        self.assertEqual(Interval(NEG_INFINITY, 1) * Interval(-1, 2), Interval(NEG_INFINITY, INFINITY))
-        self.assertEqual(Interval(-10, INFINITY) * Interval(-1, 2), Interval(NEG_INFINITY, INFINITY))
+        self.assertEqual(Interval(NEG_INFINITY, 1) * Interval(-1, 2), TOP)
+        self.assertEqual(Interval(-10, INFINITY) * Interval(-1, 2), TOP)
         self.assertEqual(Interval(0, INFINITY) * Interval(2), Interval(0, INFINITY))
         self.assertEqual(Interval(NEG_INFINITY, 0) * Interval(2), Interval(NEG_INFINITY, 0))
         self.assertEqual(Interval(NEG_INFINITY, 0) * Interval(0), Interval(0))
@@ -63,27 +57,36 @@ class TestInterval(TestCase):
         self.assertEqual(Interval(0) * Interval(NEG_INFINITY, 0), Interval(0))
 
     def test_mul_infinity(self):
-        self.assertEqual(Interval(-10, 1) * Interval(NEG_INFINITY, 2), Interval(NEG_INFINITY, INFINITY))
-        self.assertEqual(Interval(-10, 1) * Interval(-1, INFINITY), Interval(NEG_INFINITY, INFINITY))
+        self.assertEqual(Interval(-10, 1) * Interval(NEG_INFINITY, 2), TOP)
+        self.assertEqual(Interval(-10, 1) * Interval(-1, INFINITY), TOP)
         self.assertEqual(Interval(0, INFINITY) * Interval(NEG_INFINITY, 0), Interval(NEG_INFINITY, 0))
-        self.assertEqual(Interval(2) * Interval(NEG_INFINITY, INFINITY), Interval(NEG_INFINITY, INFINITY))
-        self.assertEqual(Interval(NEG_INFINITY, INFINITY) * Interval(2), Interval(NEG_INFINITY, INFINITY))
+        self.assertEqual(Interval(2) * TOP, TOP)
+        self.assertEqual(TOP * Interval(2), TOP)
         self.assertEqual(Interval(1) * Interval(0, INFINITY), Interval(0, INFINITY))
         self.assertEqual(Interval(1) * Interval(NEG_INFINITY, 0), Interval(NEG_INFINITY, 0))
 
     def test_mul_infinity_top(self):
-        self.assertEqual(
-            Interval(NEG_INFINITY, INFINITY) * Interval(NEG_INFINITY, INFINITY),
-            Interval(NEG_INFINITY, INFINITY)
-        )
+        self.assertEqual(TOP * TOP, TOP)
 
     def test_div(self):
         self.assertEqual(Interval(-10, 1) // Interval(1, 2), Interval(-10, 1))
         self.assertEqual(Interval(-10, 1) // Interval(-2, -1), Interval(-1, 10))
         self.assertEqual(Interval(1) // Interval(2), Interval(0))
 
-        with self.assertRaises(AssertionError):
-            Interval(10, 20) // Interval(-10, 10)
+    def test_div_zero(self):
+        with self.assertRaises(ZeroDivisionError):
+            Interval(10, 20) // Interval(0)
+        with self.assertRaises(ZeroDivisionError):
+            Interval(10, 20) // Interval(0, 0)
+
+    def test_div_around_zero(self):
+        self.assertEqual(Interval(1, 10) // Interval(-2, 2), Interval(-10, 10))
+        self.assertEqual(Interval(-10, 1) // Interval(-2, 2), Interval(-10, 10))
+        self.assertEqual(Interval(-10, 1) // Interval(0, 2), Interval(-10, 1))
+        self.assertEqual(Interval(-10, 1) // Interval(-2, 0), Interval(-1, 10))
 
     def test_div_infinity(self):
-        pass
+        self.assertEqual(TOP // Interval(1, 5), TOP)
+        self.assertEqual(TOP // Interval(1), TOP)
+        self.assertEqual(Interval(0, INFINITY) // TOP, TOP)
+        self.assertEqual(Interval(NEG_INFINITY, 0) // TOP, TOP)
