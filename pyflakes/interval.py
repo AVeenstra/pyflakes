@@ -1,3 +1,6 @@
+from pyflakes.boolean_lattice import Boolean
+
+
 class IntervalInt(object):
     def __init__(self, value):
         self.value = value
@@ -221,7 +224,7 @@ BOTTOM = Bottom()
 GIVE_BOTTOM = lambda _x: BOTTOM
 
 
-def get_method(m):
+def get_interval_method(m):
     def apply(self, other):
         assert isinstance(other, Interval)
         results = list(getattr(a, m)(b) for a in self for b in other)
@@ -231,4 +234,16 @@ def get_method(m):
 
 
 for method in ["__add__", "__sub__", "__mul__"]:
-    setattr(Interval, method, get_method(method))
+    setattr(Interval, method, get_interval_method(method))
+
+
+def get_bool_method(m):
+    def apply(self, other):
+        assert isinstance(other, Interval)
+        return Boolean(getattr(a, m)(b) for a in self for b in other)
+
+    return apply
+
+
+for method in ["__gt__", "__ge__", "__lt__", "__le__"]:
+    setattr(Interval, method, get_bool_method(method))
