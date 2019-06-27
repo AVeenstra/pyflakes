@@ -204,6 +204,10 @@ class TestInterval(TestCase):
     def test_div_simple(self):
         # 1 // 2 = 0
         self.assertEqual(Interval(1) // Interval(2), Interval(0))
+        # -1 // 2 = -1
+        self.assertEqual(Interval(-1) // Interval(2), Interval(-1))
+        # 8 // -7 = -2
+        self.assertEqual(Interval(8) // Interval(-7), Interval(-2))
         # 3 // 2 = 0
         self.assertEqual(Interval(3) // Interval(2), Interval(1))
         # 4 // 2 = 2
@@ -269,7 +273,13 @@ class TestInterval(TestCase):
         self.assertEqual(Interval(0, INFINITY) // Interval(0, INFINITY), Interval(0, INFINITY))
         # [0,inf] // [-inf,0] = [-inf,0]
         self.assertEqual(Interval(0, INFINITY) // Interval(NEG_INFINITY, 0), Interval(NEG_INFINITY, 0))
+
+        # Application of -1 // 8 = -1
         # 5 // [-inf,0] = [-5,0]
-        self.assertEqual(Interval(5) // Interval(NEG_INFINITY, 0), Interval(-5, 0))
-        # 5 // [-inf,0] = [-5,0]
+        self.assertEqual(Interval(5) // Interval(NEG_INFINITY, 0), Interval(-5, -1))
+        # 5 // [0,inf] = [-5,0]
         self.assertEqual(Interval(5) // Interval(0, INFINITY), Interval(0, 5))
+        # -5 // [-inf,0] = [0,5]
+        self.assertEqual(Interval(-5) // Interval(NEG_INFINITY, 0), Interval(0, 5))
+        # -5 // [0,inf] = [-5,-1]
+        self.assertEqual(Interval(-5) // Interval(0, INFINITY), Interval(-5, -1))
