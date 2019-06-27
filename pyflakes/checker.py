@@ -16,7 +16,7 @@ import sys
 import tokenize
 
 from pyflakes import messages
-from pyflakes.interval import BOTTOM
+from pyflakes.interval import BOTTOM, GIVE_BOTTOM, Interval
 
 PY2 = sys.version_info < (3, 0)
 PY35_PLUS = sys.version_info >= (3, 5)    # Python 3.5 and above
@@ -1237,7 +1237,7 @@ class Checker(object):
     PASS = ignore
 
     # "expr" type nodes
-    BOOLOP = BINOP = UNARYOP = IFEXP = SET = \
+    BOOLOP = UNARYOP = IFEXP = SET = \
         CALL = REPR = ATTRIBUTE = SUBSCRIPT = \
         STARRED = NAMECONSTANT = handleChildren
 
@@ -1257,10 +1257,29 @@ class Checker(object):
 
     def ASSIGN(self, node):
         self.interval_constraints[node] = lambda im: dict(im, **{
-            target.id: self.interval_expressions.get(node.value, lambda _x: BOTTOM)(im)
+            target.id: self.interval_expressions.get(node.value, GIVE_BOTTOM)(im)
             for target in node.targets
         })
         self.handleChildren(node)
+
+    EXPRESSIONS = {
+        ast.Add: "__add__",
+        ast.Sub: "__sub__",
+        ast.Mult: "__mul__",
+        ast.FloorDiv: "__floordiv__",
+    }
+
+    def BINOP(self, node):
+        def evaluate(im):
+            left = self.interval_expressions.get(node.left, GIVE_BOTTOM)(im)
+            right = self.interval_expressions.get(node.right, GIVE_BOTTOM)(im)
+            return getattr(left, self.EXPRESSIONS.get(type(node.op), "BOT"), GIVE_BOTTOM)(right)
+
+        self.interval_expressions[node] = evaluate
+        self.handleChildren(node)
+
+    def NUM(self, node):
+        self.interval_expressions[node] = lambda _im: Interval(node.n)
 
     def RAISE(self, node):
         self.handleChildren(node)
@@ -1364,6 +1383,8 @@ class Checker(object):
         """
         Handle occurrence of Name (which can be a load/store/delete access.)
         """
+        self.interval_expressions[node] = lambda im: im.get(node.id, BOTTOM)
+
         # Locate the name in locals / function / globals scopes.
         if isinstance(node.ctx, (ast.Load, ast.AugLoad)):
             self.handleNodeLoad(node)

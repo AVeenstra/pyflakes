@@ -218,6 +218,7 @@ class Bottom(Interval):
 ZERO = Interval(ZERO_INT)
 TOP = Interval(NEG_INFINITY, INFINITY)
 BOTTOM = Bottom()
+GIVE_BOTTOM = lambda _x: BOTTOM
 
 
 def get_method(m):
