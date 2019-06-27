@@ -39,3 +39,12 @@ class TestBuiltins(TestCase):
                 y = y + 1
             return x
         ''')
+
+    def test_divide_by_zero(self):
+        self.flakes('''
+        def foo():
+            y = 0
+            x = 7
+            y = x // y
+        ''')
+
