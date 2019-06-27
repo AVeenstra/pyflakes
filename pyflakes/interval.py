@@ -173,6 +173,12 @@ class Interval(object):
 
     def __eq__(self, other):
         self.debug_checks(other)
+        return Boolean(
+            self.begin == other.begin == self.end == other.end,
+            self.begin <= other.end and other.begin <= self.end,
+        )
+
+    def equals(self, other):
         return self.begin == other.begin and self.end == other.end
 
     def __str__(self):
@@ -183,11 +189,11 @@ class Interval(object):
 
     def __ne__(self, other):
         self.debug_checks(other)
-        return self.begin != other.begin or self.end != other.end
+        return ~(self == other)
 
     def __floordiv__(self, other):
         self.debug_checks(other)
-        if ZERO == other:
+        if ZERO.equals(other):
             raise ZeroDivisionError()
         if ZERO_INT == other.begin:
             return self // Interval(1, other.end)
