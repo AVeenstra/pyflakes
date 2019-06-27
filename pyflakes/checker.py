@@ -16,6 +16,7 @@ import sys
 import tokenize
 
 from pyflakes import messages
+from pyflakes.interval import BOTTOM
 
 PY2 = sys.version_info < (3, 0)
 PY35_PLUS = sys.version_info >= (3, 5)    # Python 3.5 and above
@@ -660,6 +661,11 @@ class Checker(object):
     #       is defaulted to `()` for api compatibility.
     def __init__(self, tree, filename='(none)', builtins=None,
                  withDoctest='PYFLAKES_DOCTEST' in os.environ, file_tokens=()):
+
+        self.intervals = dict()  # dictionary of method -> list of intervals
+        self.interval_constraints = dict()  # dictionary of node -> constraint methods
+        self.interval_expressions = dict()  # dictionary of node -> interval method
+
         self._nodeHandlers = {}
         self._deferredFunctions = []
         self._deferredAssignments = []
@@ -1226,7 +1232,7 @@ class Checker(object):
     # "stmt" type nodes
     DELETE = PRINT = FOR = ASYNCFOR = WHILE = IF = WITH = WITHITEM = \
         ASYNCWITH = ASYNCWITHITEM = TRYFINALLY = EXEC = \
-        EXPR = ASSIGN = handleChildren
+        EXPR = handleChildren
 
     PASS = ignore
 
@@ -1248,6 +1254,13 @@ class Checker(object):
         BITOR = BITXOR = BITAND = FLOORDIV = INVERT = NOT = UADD = USUB = \
         EQ = NOTEQ = LT = LTE = GT = GTE = IS = ISNOT = IN = NOTIN = \
         MATMULT = ignore
+
+    def ASSIGN(self, node):
+        self.interval_constraints[node] = lambda im: dict(im, **{
+            target.id: self.interval_expressions.get(node.value, lambda _x: BOTTOM)(im)
+            for target in node.targets
+        })
+        self.handleChildren(node)
 
     def RAISE(self, node):
         self.handleChildren(node)
@@ -1500,6 +1513,22 @@ class Checker(object):
                         self.report(messages.ReturnWithArgsInsideGenerator,
                                     self.scope.returnValue)
                 self.deferAssignment(checkReturnWithArgumentInsideGenerator)
+
+            def intervalAnalyses():
+                """
+                Do cool stuff
+                :return:
+                """
+                original = None
+                im = {}
+                while original != im:
+                    original = im
+
+                    for child in iter_child_nodes(node, omit='decorator_list'):
+                        im = self.interval_constraints.get(child, (lambda x: x.copy()))(im)
+
+                print(im)
+            self.deferAssignment(intervalAnalyses)
             self.popScope()
 
         self.deferFunction(runFunction)
