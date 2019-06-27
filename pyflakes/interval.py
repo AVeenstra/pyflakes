@@ -211,6 +211,9 @@ class Bottom(Interval):
     def __init__(self):
         super(Bottom, self).__init__(0, 0)
 
+    def __str__(self):
+        return "⊥"
+
 
 ZERO = Interval(ZERO_INT)
 TOP = Interval(NEG_INFINITY, INFINITY)
