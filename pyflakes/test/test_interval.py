@@ -71,7 +71,7 @@ class TestInterval(TestCase):
 
     def test_minus_integer(self):
         # 3 - 2 = 1
-        self.assertEqual(Interval(3) - Interval(1), Interval(1))
+        self.assertEqual(Interval(3) - Interval(2), Interval(1))
         # 1 - 1 = 0
         self.assertEqual(Interval(1) - Interval(1), Interval(0))
         # -1 - -1 = 0
