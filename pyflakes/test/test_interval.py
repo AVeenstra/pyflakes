@@ -3,6 +3,9 @@ from pyflakes.test.harness import TestCase
 
 
 class TestInterval(TestCase):
+    def assertEqual(self, first: Interval, second: Interval, msg=...) -> None:
+        super(TestInterval, self).assertEqual(str(first), str(second), msg)
+
     def test_plus_integers(self):
         #  1 + 2 = 3
         self.assertEqual(Interval(1) + Interval(2), Interval(3))
