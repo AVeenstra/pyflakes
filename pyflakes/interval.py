@@ -199,9 +199,22 @@ class Interval(object):
         self.debug_checks(other)
         return Interval(min(self.begin, other.begin), max(self.end, other.end))
 
+    def intersection(self, other):
+        self.debug_checks(other)
+        if self.end < other.begin or other.end < self.begin:
+            return BOTTOM
+        return Interval(max(self.begin, other.begin), min(self.end, other.end))
+
+
+class Bottom(Interval):
+    # TODO implement this
+    def __init__(self):
+        super(Bottom, self).__init__(0, 0)
+
 
 ZERO = Interval(ZERO_INT)
 TOP = Interval(NEG_INFINITY, INFINITY)
+BOTTOM = Bottom()
 
 
 def get_method(m):
