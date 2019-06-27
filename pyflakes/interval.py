@@ -1,6 +1,21 @@
 from pyflakes.boolean_lattice import Boolean
 
 
+def interval_method(self, other, m):
+    assert isinstance(other, Interval)
+    if isinstance(other, Bottom):
+        return other
+    results = list(getattr(a, m)(b) for a in self for b in other)
+    return Interval(min(results), max(results))
+
+
+def bool_method(self, other, m):
+    assert isinstance(other, Interval)
+    if isinstance(other, Bottom):
+        return other
+    return Boolean(getattr(a, m)(b) for a in self for b in other)
+
+
 class IntervalInt(object):
     def __init__(self, value):
         self.value = value
@@ -31,8 +46,10 @@ class IntervalInt(object):
         return IntervalInt(self.value - other.value)
 
     def __floordiv__(self, other):
-        if isinstance(other, (InfinityClass, NegInfinityClass)):
-            return IntervalInt(0)
+        if isinstance(other, InfinityClass):
+            return IntervalInt(0 if 0 <= self.value else -1)
+        if isinstance(other, NegInfinityClass):
+            return IntervalInt(0 if self.value <= 0 else -1)
         return IntervalInt(self.value // other.value)
 
     def __mul__(self, other):
@@ -173,6 +190,8 @@ class Interval(object):
 
     def __eq__(self, other):
         self.debug_checks(other)
+        if isinstance(other, Bottom):
+            return other
         return Boolean(
             self.begin == other.begin == self.end == other.end,
             self.begin <= other.end and other.begin <= self.end,
@@ -193,6 +212,8 @@ class Interval(object):
 
     def __floordiv__(self, other):
         self.debug_checks(other)
+        if isinstance(other, Bottom):
+            return other
         if ZERO.equals(other):
             raise ZeroDivisionError()
         if ZERO_INT == other.begin:
@@ -214,6 +235,27 @@ class Interval(object):
             return BOTTOM
         return Interval(max(self.begin, other.begin), min(self.end, other.end))
 
+    def __add__(self, other):
+        return interval_method(self, other, "__add__")
+
+    def __sub__(self, other):
+        return interval_method(self, other, "__sub__")
+
+    def __mul__(self, other):
+        return interval_method(self, other, "__mul__")
+
+    def __gt__(self, other):
+        return bool_method(self, other, "__gt__")
+
+    def __ge__(self, other):
+        return bool_method(self, other, "__ge__")
+
+    def __lt__(self, other):
+        return bool_method(self, other, "__lt__")
+
+    def __le__(self, other):
+        return bool_method(self, other, "__le__")
+
 
 class Bottom(Interval):
     # TODO implement this
@@ -223,33 +265,13 @@ class Bottom(Interval):
     def __str__(self):
         return "⊥"
 
+    def __add__(self, other):
+        return self
+
+    __sub__ = __mul__ = __gt__ = __ge__ = __lt__ = __le__ = __eq__ = __floordiv__ = __add__
+
 
 ZERO = Interval(ZERO_INT)
 TOP = Interval(NEG_INFINITY, INFINITY)
 BOTTOM = Bottom()
 GIVE_BOTTOM = lambda _x: BOTTOM
-
-
-def get_interval_method(m):
-    def apply(self, other):
-        assert isinstance(other, Interval)
-        results = list(getattr(a, m)(b) for a in self for b in other)
-        return Interval(min(results), max(results))
-
-    return apply
-
-
-for method in ["__add__", "__sub__", "__mul__"]:
-    setattr(Interval, method, get_interval_method(method))
-
-
-def get_bool_method(m):
-    def apply(self, other):
-        assert isinstance(other, Interval)
-        return Boolean(getattr(a, m)(b) for a in self for b in other)
-
-    return apply
-
-
-for method in ["__gt__", "__ge__", "__lt__", "__le__"]:
-    setattr(Interval, method, get_bool_method(method))
