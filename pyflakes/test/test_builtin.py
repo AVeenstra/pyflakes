@@ -3,7 +3,7 @@ Tests for detecting redefinition of builtins.
 """
 from sys import version_info
 
-from pyflakes import messages as m
+from pyflakes.messages import Message as m
 from pyflakes.test.harness import TestCase, skipIf
 
 

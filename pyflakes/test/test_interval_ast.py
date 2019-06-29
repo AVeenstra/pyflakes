@@ -1,7 +1,7 @@
 """
 Tests for detecting redefinition of builtins.
 """
-from pyflakes import messages as m
+from pyflakes.checker import Checker
 from pyflakes.test.harness import TestCase, skipIf
 from sys import version_info
 
@@ -9,11 +9,41 @@ from sys import version_info
 class TestBuiltins(TestCase):
     def test_basic_method(self):
         self.flakes('''
-        def foo(arg: int):
-            a = 42
-            b = a + arg
-            a = a - b
-        foo(0)
+            def foo(arg: bool):
+                arg = True
+                arg = False
+                a = 42
+                b = a + 7
+                c = a // 0
+                if arg:
+                    a = a + 2
+                elif false:
+                    a = a + 3
+                elif true:
+                    a = a + 4
+                else:
+                    a = a + 5
+                return a
+            foo(true)
+        ''')
+
+    def test_basic_method_args(self):
+            self.flakes('''
+            def foo(arg: int):
+                a = 42
+                b = a + arg
+                a = a - b
+            foo(0)
+        ''')
+
+    def test_basic_method_bool(self):
+            self.flakes('''
+            def foo(arg: bool):
+                a = 42
+                b = a + 7
+                if(arg):
+                    a = 0
+            foo(0)
         ''')
 
     def test_no_args(self):

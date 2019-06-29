@@ -90,6 +90,14 @@ class DoctestSyntaxError(Message):
             (self.lineno, self.col) = position
         self.message_args = ()
 
+class DivisionByZero(Message):
+    message = 'division by zero is undefined'
+
+    def __init__(self, filename, loc, position=None):
+        Message.__init__(self, filename, loc)
+        if position:
+            (self.lineno, self.col) = position
+        self.message_args = ()
 
 class UndefinedExport(Message):
     message = 'undefined name %r in __all__'

@@ -275,3 +275,4 @@ ZERO = Interval(ZERO_INT)
 TOP = Interval(NEG_INFINITY, INFINITY)
 BOTTOM = Bottom()
 GIVE_BOTTOM = lambda _x: BOTTOM
+GIVE_TOP = lambda _x: TOP

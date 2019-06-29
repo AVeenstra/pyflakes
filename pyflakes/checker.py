@@ -15,8 +15,12 @@ import re
 import sys
 import tokenize
 
+import astunparse
+import inspect
+
 from pyflakes import messages
-from pyflakes.interval import BOTTOM, GIVE_BOTTOM, Interval
+from pyflakes.interval import BOTTOM, GIVE_BOTTOM, GIVE_TOP, Interval, TOP
+from pyflakes.boolean_lattice import TRUE, FALSE, GIVE_BOOLEAN_TOP, GIVE_BOOLEAN_BOTTOM, BOOLEAN_BOTTOM, BOOLEAN_TOP
 
 PY2 = sys.version_info < (3, 0)
 PY35_PLUS = sys.version_info >= (3, 5)    # Python 3.5 and above
@@ -78,7 +82,7 @@ else:
 TYPE_COMMENT_RE = re.compile(r'^#\s*type:\s*')
 # https://github.com/python/typed_ast/blob/55420396/ast27/Parser/tokenizer.c#L1400
 TYPE_IGNORE_RE = re.compile(TYPE_COMMENT_RE.pattern + r'ignore\s*(#|$)')
-# https://github.com/python/typed_ast/blob/55420396/ast27/Grammar/Grammar#L147
+# https://github.com/python/typed_F/blob/55420396/ast27/Grammar/Grammar#L147
 TYPE_FUNC_RE = re.compile(r'^(\(.*?\))\s*->\s*(.*)$')
 
 
@@ -697,6 +701,27 @@ class Checker(object):
         self.popScope()
         self.checkDeadScopes()
 
+    def pprint_interval_constraints(self):
+        constrain_counter = 0
+        for constraint in self.interval_constraints:
+            print(str(constrain_counter) + ". \"" + astunparse.unparse(constraint).replace('\n','') + "\" ")
+            print(inspect.getsource(self.interval_constraints[constraint]))
+            constrain_counter += 1
+
+    def pprint_interval_expressions(self):
+        expression_counter = 0
+        for expression in self.interval_expressions:
+            print(str(expression_counter) + ". \"" + astunparse.unparse(expression).replace('\n','') + "\" ")
+            print(inspect.getsource(self.interval_expressions[expression]))
+            expression_counter += 1
+
+    def pprint_interval_expressions(self):
+        expression_counter = 0
+        for expression in self.interval_expressions:
+            print(str(expression_counter) + ". \"" + astunparse.unparse(expression).replace('\n','') + "\" ")
+            print(inspect.getsource(self.interval_expressions[expression]))
+            expression_counter += 1
+
     def deferFunction(self, callable):
         """
         Schedule a function handler to be called just before completion.
@@ -1230,7 +1255,7 @@ class Checker(object):
         pass
 
     # "stmt" type nodes
-    DELETE = PRINT = FOR = ASYNCFOR = WHILE = IF = WITH = WITHITEM = \
+    DELETE = PRINT = FOR = ASYNCFOR = WHILE = WITH = WITHITEM = \
         ASYNCWITH = ASYNCWITHITEM = TRYFINALLY = EXEC = \
         EXPR = handleChildren
 
@@ -1271,15 +1296,52 @@ class Checker(object):
 
     def BINOP(self, node):
         def evaluate(im):
-            left = self.interval_expressions.get(node.left, GIVE_BOTTOM)(im)
-            right = self.interval_expressions.get(node.right, GIVE_BOTTOM)(im)
-            return getattr(left, self.EXPRESSIONS.get(type(node.op), "BOT"), GIVE_BOTTOM)(right)
+            try:
+                left = self.interval_expressions.get(node.left, GIVE_BOTTOM)(im)
+                right = self.interval_expressions.get(node.right, GIVE_BOTTOM)(im)
+                return getattr(left, self.EXPRESSIONS.get(type(node.op), "BOT"), GIVE_BOTTOM)(right)
+            except ZeroDivisionError as error:
+                self.report(messages.DivisionByZero, node)
+                return BOTTOM
 
         self.interval_expressions[node] = evaluate
         self.handleChildren(node)
 
     def NUM(self, node):
         self.interval_expressions[node] = lambda _im: Interval(node.n)
+
+    #Because True / False are named constants
+    def NAMECONSTANT(self, node):
+        self.interval_expressions[node] = lambda _im: Interval(node.value)
+
+    def IF(self, node):
+        self.handleChildren(node)
+        def evaluate(im):
+            old_intervals = im.copy() # Used when there is no else (and thus perhaps nothing will change)
+            orelse_intervals = {} # Intervals of elif or else
+
+            # Determine own constraints
+            for child in node.body:
+                im.update(self.interval_constraints[child](im))
+
+            # Constraints of elif / else
+            for child in node.orelse:
+                if type(child) is ast.If:
+                    orelse_intervals = self.interval_constraints[child](old_intervals.copy())
+                    old_intervals = {}
+                else:
+                    orelse_intervals = self.interval_constraints[child](old_intervals.copy())
+                    old_intervals = {}
+
+            # Join with new/old intervals
+            for interval in im:
+                if interval in old_intervals:
+                    im[interval] = old_intervals[interval].join(im[interval])
+                if interval in orelse_intervals:
+                    im[interval] = orelse_intervals[interval].join(im[interval])
+
+            return im
+        self.interval_constraints[node] = evaluate
 
     def RAISE(self, node):
         self.handleChildren(node)
@@ -1536,19 +1598,42 @@ class Checker(object):
                 self.deferAssignment(checkReturnWithArgumentInsideGenerator)
 
             def intervalAnalyses():
-                """
-                Do cool stuff
-                :return:
-                """
-                original = None
-                im = {}
-                while original != im:
-                    original = im
 
+                # Initialize empty intervals for children.
+                intervals = dict()
+                for x in iter_child_nodes(node, omit='decorator_list'):
+                    intervals[x] = {}
+
+                original = dict()
+
+                # "Straight-Forward" Algorithm
+                while original != intervals:  # Continue applying constraints until fixed point has been reached
+                    original = intervals.copy()
+
+                    constraint_counter = 0
+                    previous_interval = {}
                     for child in iter_child_nodes(node, omit='decorator_list'):
-                        im = self.interval_constraints.get(child, (lambda x: x.copy()))(im)
 
-                print(im)
+                        #Xn = Xn-1[Xn]
+                        intervals[child].update(previous_interval)
+                        intervals[child].update(self.interval_constraints.get(child, (lambda x: x.copy()))(intervals[child]))
+                        previous_interval = intervals[child]
+
+                        #Print Xn
+                        print(str(constraint_counter) + ". \"" + astunparse.unparse(child).replace('\n', '') + "\" -> " + str(intervals[child]))
+                        constraint_counter += 1
+
+            # DEBUG PRINTING
+            #print("/--------- Constraints --------/")
+            #self.pprint_interval_constraints()
+            #print("\n\n")
+
+            #print("/--------- Expressions Constraints --------/")
+            #self.pprint_interval_expressions()
+
+            #print("/--------- Intervals --------/")
+            #self.pprint_intervals()
+
             self.deferAssignment(intervalAnalyses)
             self.popScope()
 
@@ -1556,6 +1641,11 @@ class Checker(object):
 
     def ARGUMENTS(self, node):
         self.handleChildren(node, omit=('defaults', 'kw_defaults'))
+        self.interval_constraints[node] = lambda im: dict(im, **{
+            argument.arg: self.interval_expressions.get(argument.arg, GIVE_TOP)(im)
+            for argument in node.args
+        })
+
         if PY2:
             scope_node = self.getScopeNode(node)
             if node.vararg:
@@ -1564,6 +1654,10 @@ class Checker(object):
                 self.addBinding(node, Argument(node.kwarg, scope_node))
 
     def ARG(self, node):
+        if node.annotation.id == 'int':
+            self.interval_expressions[node] = GIVE_TOP
+        elif node.annotation.id == 'bool':
+            self.interval_expressions[node] = GIVE_BOOLEAN_TOP
         self.addBinding(node, Argument(node.arg, self.getScopeNode(node)))
 
     def CLASSDEF(self, node):

@@ -15,13 +15,6 @@ class Boolean:
     def __bool__(self):
         raise Exception("Booleans can not be cast to Python bools")
 
-
-B_TOP = Boolean(True, False)
-TRUE = Boolean(True)
-FALSE = Boolean(False)
-B_BOT = Boolean()
-
-
 def get_method(m):
     def apply(self, other):
         assert isinstance(other, Boolean)
@@ -33,3 +26,14 @@ def get_method(m):
 
 for method in ["__eq__", "__ne__", "__and__", "__or__", "__xor__"]:
     setattr(Boolean, method, get_method(method))
+
+
+BOOLEAN_TOP = Boolean(True, False)
+TRUE = Boolean(True)
+FALSE = Boolean(False)
+BOOLEAN_BOTTOM = Boolean()
+
+GIVE_BOOLEAN_BOTTOM = lambda _x: BOOLEAN_BOTTOM
+GIVE_BOOLEAN_TOP = lambda _x: BOOLEAN_TOP
+
+
