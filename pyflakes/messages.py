@@ -99,6 +99,15 @@ class DivisionByZero(Message):
             (self.lineno, self.col) = position
         self.message_args = ()
 
+class DeadCode(Message):
+    message = 'part of the code is unreachable'
+
+    def __init__(self, filename, loc, position=None):
+        Message.__init__(self, filename, loc)
+        if position:
+            (self.lineno, self.col) = position
+        self.message_args = ()
+
 class UndefinedExport(Message):
     message = 'undefined name %r in __all__'
 
