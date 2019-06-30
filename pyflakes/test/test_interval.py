@@ -1,4 +1,4 @@
-from pyflakes.interval import Interval, INFINITY, NEG_INFINITY, INTEGER_TOP, INTEGER_BOTTOM
+from pyflakes.interval import Interval, INFINITY, NEG_INFINITY, TOP, BOTTOM
 from pyflakes.test.harness import TestCase
 
 
@@ -29,7 +29,7 @@ class TestInterval(TestCase):
         self.assertEqual(Interval(-10, 1) + Interval(-1, 2), Interval(-11, 3))
         # [-1,0] + [1,1] = [0,1]
         self.assertEqual(Interval(-1, 0) + Interval(1), Interval(0, 1))
-        # [0,1] + [-1,-1] = [-1,0]G
+        # [0,1] + [-1,-1] = [-1,0]
         self.assertEqual(Interval(0, 1) + Interval(-1), Interval(-1, 0))
 
     def test_plus_infinity(self):
@@ -50,24 +50,24 @@ class TestInterval(TestCase):
         self.assertEqual(Interval(-10, 1) + Interval(NEG_INFINITY, 2), Interval(NEG_INFINITY, 3))
         # [-10,1] + [-1,inf] = [-11,inf]
         self.assertEqual(Interval(-10, 1) + Interval(-1, INFINITY), Interval(-11, INFINITY))
-        # [0,inf] + [-inf,0] = INTEGER_TOP]
+        # [0,inf] + [-inf,0] = TOP]
         self.assertEqual(Interval(0, INFINITY) + Interval(NEG_INFINITY, 0), Interval(NEG_INFINITY, INFINITY))
 
     def test_plus_top(self):
-        # INTEGER_TOP + INTEGER_TOP = INTEGER_TOP
-        self.assertEqual(INTEGER_TOP + INTEGER_TOP, INTEGER_TOP)
-        # 2 + INTEGER_TOP = INTEGER_TOP
-        self.assertEqual(Interval(2) + INTEGER_TOP, INTEGER_TOP)
-        # INTEGER_TOP + 2 = INTEGER_TOP
-        self.assertEqual(INTEGER_TOP + Interval(2), INTEGER_TOP)
+        # TOP + TOP = TOP
+        self.assertEqual(TOP + TOP, TOP)
+        # 2 + TOP = TOP
+        self.assertEqual(Interval(2) + TOP, TOP)
+        # TOP + 2 = TOP
+        self.assertEqual(TOP + Interval(2), TOP)
 
     def test_plus_bottom(self):
-        # INTEGER_BOTTOM + INTEGER_BOTTOM = INTEGER_BOTTOM
-        self.assertEqual(INTEGER_BOTTOM + INTEGER_BOTTOM, INTEGER_BOTTOM)
-        # 2 + INTEGER_BOTTOM = INTEGER_BOTTOM
-        self.assertEqual(Interval(2) + INTEGER_BOTTOM, INTEGER_BOTTOM)
-        # INTEGER_BOTTOM + 2 = INTEGER_BOTTOM
-        self.assertEqual(INTEGER_BOTTOM + Interval(2), INTEGER_BOTTOM)
+        # BOTTOM + BOTTOM = BOTTOM
+        self.assertEqual(BOTTOM + BOTTOM, BOTTOM)
+        # 2 + BOTTOM = BOTTOM
+        self.assertEqual(Interval(2) + BOTTOM, BOTTOM)
+        # BOTTOM + 2 = BOTTOM
+        self.assertEqual(BOTTOM + Interval(2), BOTTOM)
 
     def test_minus_integer(self):
         # 3 - 2 = 1
@@ -120,20 +120,20 @@ class TestInterval(TestCase):
         self.assertEqual(Interval(0, INFINITY) - Interval(NEG_INFINITY, 0), Interval(0, INFINITY))
 
     def test_minus_top(self):
-        # 2 - INTEGER_TOP = INTEGER_TOP
-        self.assertEqual(Interval(2) - INTEGER_TOP, INTEGER_TOP)
-        # INTEGER_TOP - 2 = INTEGER_TOP
-        self.assertEqual(INTEGER_TOP - Interval(2), INTEGER_TOP)
-        # INTEGER_TOP - INTEGER_TOP = INTEGER_TOP
-        self.assertEqual(INTEGER_TOP - INTEGER_TOP, INTEGER_TOP)
+        # 2 - TOP = TOP
+        self.assertEqual(Interval(2) - TOP, TOP)
+        # TOP - 2 = TOP
+        self.assertEqual(TOP - Interval(2), TOP)
+        # TOP - TOP = TOP
+        self.assertEqual(TOP - TOP, TOP)
 
     def test_minus_bottom(self):
-        # 2 - INTEGER_BOTTOM = INTEGER_BOTTOM
-        self.assertEqual(Interval(2) - INTEGER_BOTTOM, INTEGER_BOTTOM)
-        # INTEGER_BOTTOM - 2 = INTEGER_BOTTOM
-        self.assertEqual(INTEGER_BOTTOM - Interval(2), INTEGER_BOTTOM)
-        # INTEGER_BOTTOM - INTEGER_BOTTOM = INTEGER_BOTTOM
-        self.assertEqual(INTEGER_BOTTOM - INTEGER_BOTTOM, INTEGER_BOTTOM)
+        # 2 - BOTTOM = BOTTOM
+        self.assertEqual(Interval(2) - BOTTOM, BOTTOM)
+        # BOTTOM - 2 = BOTTOM
+        self.assertEqual(BOTTOM - Interval(2), BOTTOM)
+        # BOTTOM - BOTTOM = BOTTOM
+        self.assertEqual(BOTTOM - BOTTOM, BOTTOM)
 
     def test_mul_simple(self):
         # 1 * 2 = 2
@@ -190,24 +190,24 @@ class TestInterval(TestCase):
         self.assertEqual(Interval(NEG_INFINITY, 0) * Interval(0, INFINITY), Interval(NEG_INFINITY, 0))
 
     def test_mul_top(self):
-        # [-inf,1] * [-1,2] = INTEGER_TOP
-        self.assertEqual(Interval(NEG_INFINITY, 1) * Interval(-1, 2), INTEGER_TOP)
-        # [-10,inf] * [-1,2] = INTEGER_TOP
-        self.assertEqual(Interval(-10, INFINITY) * Interval(-1, 2), INTEGER_TOP)
-        # 2 * INTEGER_TOP = INTEGER_TOP
-        self.assertEqual(Interval(2) * INTEGER_TOP, INTEGER_TOP)
-        # INTEGER_TOP * 2 = INTEGER_TOP
-        self.assertEqual(INTEGER_TOP * Interval(2), INTEGER_TOP)
-        # INTEGER_TOP * INTEGER_TOP = INTEGER_TOP
-        self.assertEqual(INTEGER_TOP * INTEGER_TOP, INTEGER_TOP)
+        # [-inf,1] * [-1,2] = TOP
+        self.assertEqual(Interval(NEG_INFINITY, 1) * Interval(-1, 2), TOP)
+        # [-10,inf] * [-1,2] = TOP
+        self.assertEqual(Interval(-10, INFINITY) * Interval(-1, 2), TOP)
+        # 2 * TOP = TOP
+        self.assertEqual(Interval(2) * TOP, TOP)
+        # TOP * 2 = TOP
+        self.assertEqual(TOP * Interval(2), TOP)
+        # TOP * TOP = TOP
+        self.assertEqual(TOP * TOP, TOP)
 
     def test_mul_bottom(self):
-        # 2 * INTEGER_BOTTOM = INTEGER_BOTTOM
-        self.assertEqual(Interval(2) * INTEGER_BOTTOM, INTEGER_BOTTOM)
-        # INTEGER_BOTTOM * 2 = INTEGER_BOTTOM
-        self.assertEqual(INTEGER_BOTTOM * Interval(2), INTEGER_BOTTOM)
-        # INTEGER_BOTTOM * INTEGER_BOTTOM = INTEGER_BOTTOM
-        self.assertEqual(INTEGER_BOTTOM * INTEGER_BOTTOM, INTEGER_BOTTOM)
+        # 2 * BOTTOM = BOTTOM
+        self.assertEqual(Interval(2) * BOTTOM, BOTTOM)
+        # BOTTOM * 2 = BOTTOM
+        self.assertEqual(BOTTOM * Interval(2), BOTTOM)
+        # BOTTOM * BOTTOM = BOTTOM
+        self.assertEqual(BOTTOM * BOTTOM, BOTTOM)
 
     def test_div_simple(self):
         # 4 // 2 = 2
@@ -284,29 +284,29 @@ class TestInterval(TestCase):
         self.assertEqual(Interval(NEG_INFINITY, 0) // Interval(0, INFINITY), Interval(NEG_INFINITY, 0))
 
     def test_div_top(self):
-        # INTEGER_TOP // 1 = INTEGER_TOP
-        self.assertEqual(INTEGER_TOP // Interval(1), INTEGER_TOP)
-        # 5 // INTEGER_TOP = [-5,5]
-        self.assertEqual(Interval(5) // INTEGER_TOP, Interval(-5, 5))
-        # INTEGER_TOP // [1,5] = INTEGER_TOP
-        self.assertEqual(INTEGER_TOP // Interval(1, 5), INTEGER_TOP)
-        # [1,5] // INTEGER_TOP = INTEGER_TOP
-        self.assertEqual(Interval(1, 5) // INTEGER_TOP, Interval(-5, 5))
-        # [0,inf] // INTEGER_TOP = INTEGER_TOP
-        self.assertEqual(Interval(0, INFINITY) // INTEGER_TOP, INTEGER_TOP)
-        # [-inf,0] // INTEGER_TOP = INTEGER_TOP
-        self.assertEqual(Interval(NEG_INFINITY, 0) // INTEGER_TOP, INTEGER_TOP)
-        # INTEGER_TOP // [0,inf] = INTEGER_TOP
-        self.assertEqual(INTEGER_TOP // Interval(0, INFINITY), INTEGER_TOP)
-        # INTEGER_TOP // [-inf,0] = INTEGER_TOP
-        self.assertEqual(INTEGER_TOP // Interval(NEG_INFINITY, 0), INTEGER_TOP)
-        # INTEGER_TOP // INTEGER_TOP = INTEGER_TOP
-        self.assertEqual(INTEGER_TOP // INTEGER_TOP, INTEGER_TOP)
+        # TOP // 1 = TOP
+        self.assertEqual(TOP // Interval(1), TOP)
+        # 5 // TOP = [-5,5]
+        self.assertEqual(Interval(5) // TOP, Interval(-5, 5))
+        # TOP // [1,5] = TOP
+        self.assertEqual(TOP // Interval(1, 5), TOP)
+        # [1,5] // TOP = TOP
+        self.assertEqual(Interval(1, 5) // TOP, Interval(-5, 5))
+        # [0,inf] // TOP = TOP
+        self.assertEqual(Interval(0, INFINITY) // TOP, TOP)
+        # [-inf,0] // TOP = TOP
+        self.assertEqual(Interval(NEG_INFINITY, 0) // TOP, TOP)
+        # TOP // [0,inf] = TOP
+        self.assertEqual(TOP // Interval(0, INFINITY), TOP)
+        # TOP // [-inf,0] = TOP
+        self.assertEqual(TOP // Interval(NEG_INFINITY, 0), TOP)
+        # TOP // TOP = TOP
+        self.assertEqual(TOP // TOP, TOP)
 
     def test_div_bottom(self):
-        # 2 // INTEGER_BOTTOM = INTEGER_BOTTOM
-        self.assertEqual(Interval(2) // INTEGER_BOTTOM, INTEGER_BOTTOM)
-        # INTEGER_BOTTOM // 2 = INTEGER_BOTTOM
-        self.assertEqual(INTEGER_BOTTOM // Interval(2), INTEGER_BOTTOM)
-        # INTEGER_BOTTOM // INTEGER_BOTTOM = INTEGER_BOTTOM
-        self.assertEqual(INTEGER_BOTTOM // INTEGER_BOTTOM, INTEGER_BOTTOM)
+        # 2 // BOTTOM = BOTTOM
+        self.assertEqual(Interval(2) // BOTTOM, BOTTOM)
+        # BOTTOM // 2 = BOTTOM
+        self.assertEqual(BOTTOM // Interval(2), BOTTOM)
+        # BOTTOM // BOTTOM = BOTTOM
+        self.assertEqual(BOTTOM // BOTTOM, BOTTOM)
