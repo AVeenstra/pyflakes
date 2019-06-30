@@ -1,9 +1,8 @@
 """
 Tests for detecting redefinition of builtins.
 """
-from pyflakes.checker import Checker
-from pyflakes.test.harness import TestCase, skipIf
-from sys import version_info
+from pyflakes.test.harness import TestCase
+from pyflakes.messages import DivisionByZero
 
 
 class TestBuiltins(TestCase):
@@ -71,7 +70,7 @@ class TestBuiltins(TestCase):
         ''')
 
     def test_divide_by_zero(self):
-        with self.assertRaises(ZeroDivisionError):
+        with self.assertRaisesRegex(AssertionError, DivisionByZero.message):
             self.flakes('''
             def foo():
                 y = 0
@@ -80,16 +79,16 @@ class TestBuiltins(TestCase):
             ''')
 
     def test_divide_by_zero_computed(self):
-        with self.assertRaises(ZeroDivisionError):
+        with self.assertRaisesRegex(AssertionError, DivisionByZero.message):
             self.flakes('''
             def foo():
                 y = 1
-                x = 2
-                y = x // (y-1)
+                x = 1
+                y = x // (y-x)
             ''')
 
     def test_divide_by_zero_floor(self):
-        with self.assertRaises(ZeroDivisionError):
+        with self.assertRaisesRegex(AssertionError, DivisionByZero.message):
             self.flakes('''
             def foo():
                 y = 1
@@ -98,7 +97,7 @@ class TestBuiltins(TestCase):
             ''')
 
     def test_divide_by_zero_multiplication(self):
-        with self.assertRaises(ZeroDivisionError):
+        with self.assertRaisesRegex(AssertionError, DivisionByZero.message):
             self.flakes('''
             def foo():
                 x = 2
@@ -106,7 +105,7 @@ class TestBuiltins(TestCase):
             ''')
 
     def test_divide_by_zero_addition(self):
-        with self.assertRaises(ZeroDivisionError):
+        with self.assertRaisesRegex(AssertionError, DivisionByZero.message):
             self.flakes('''
             def foo():
                 x = -5

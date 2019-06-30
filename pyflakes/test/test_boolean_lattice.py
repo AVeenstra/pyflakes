@@ -27,7 +27,7 @@ class TestInterval(TestCase):
 
         self.assertEqual(BOOLEAN_TOP | TRUE, TRUE)
         self.assertEqual(BOOLEAN_TOP | FALSE, BOOLEAN_TOP)
-        self.assertEqual(BOOLEAN_BOTTOM | TRUE, TRUE)
+        self.assertEqual(BOOLEAN_BOTTOM | TRUE, BOOLEAN_BOTTOM)
         self.assertEqual(BOOLEAN_BOTTOM | FALSE, BOOLEAN_BOTTOM)
 
     def test_equal(self):
