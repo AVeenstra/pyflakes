@@ -3,9 +3,9 @@ from pyflakes.boolean_lattice import TRUE, FALSE, BOOLEAN_TOP, BOOLEAN_BOTTOM
 from pyflakes.test.harness import TestCase
 
 
-class TestInterval(TestCase):
+class TestIntervalComparator(TestCase):
     def assertEqual(self, first: Interval, second: Interval, msg=...) -> None:
-        super(TestInterval, self).assertEqual(str(first), str(second), msg)
+        super(TestIntervalComparator, self).assertEqual(str(first), str(second), msg)
 
     def test_smaller(self):
         self.assertEqual(Interval(5) < Interval(6), TRUE)

@@ -5,8 +5,7 @@ from pyflakes.test.harness import TestCase
 from pyflakes import messages as m
 
 
-class TestBuiltins(TestCase):
-
+class TestIntervalASTReport(TestCase):
     def test_divide_by_zero(self):
         self.flakes('''
         def foo():

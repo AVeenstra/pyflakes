@@ -5,7 +5,7 @@ from pyflakes.test.harness import TestCase
 from pyflakes import messages as m
 
 
-class TestBuiltins(TestCase):
+class TestIntervalAST(TestCase):
     def test_basic_method(self):
         self.flakes('''
             def foo(arg: bool):
