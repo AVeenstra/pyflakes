@@ -1264,9 +1264,9 @@ class Checker(object):
     # "expr" type nodes
     BOOLOP = UNARYOP = IFEXP = SET = \
         CALL = REPR = ATTRIBUTE = SUBSCRIPT = \
-        STARRED = NAMECONSTANT = handleChildren
+        STARRED = handleChildren
 
-    NUM = STR = BYTES = ELLIPSIS = CONSTANT = ignore
+    STR = BYTES = ELLIPSIS = CONSTANT = ignore
 
     # "slice" type nodes
     SLICE = EXTSLICE = INDEX = handleChildren
