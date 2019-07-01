@@ -1308,17 +1308,22 @@ class Checker(object):
         def evaluate(im):
             if(len(node.values) == 1):
                 return getattr(node.values[0], self.EXPRESSIONS.get(type(node.op), "BOT"), GIVE_BOTTOM)(node.values[0])
-            elif(len(node.values) == 2):
+            else:
                 left = self.interval_expressions.get(node.values[0], GIVE_BOTTOM)(im)
                 right = self.interval_expressions.get(node.values[1], GIVE_BOTTOM)(im)
-            return getattr(left, self.EXPRESSIONS.get(type(node.op), "BOT"), GIVE_BOTTOM)(right)
+                result = getattr(left, self.EXPRESSIONS.get(type(node.op), "BOT"), GIVE_BOTTOM)(right)
+                for i in range(2, len(node.values)):
+                    right = self.interval_expressions.get(node.values[i], GIVE_BOTTOM)(im)
+                    result = getattr(result, self.EXPRESSIONS.get(type(node.op), "BOT"), GIVE_BOTTOM)(right)
+                return result
 
         self.interval_expressions[node] = evaluate
         self.handleChildren(node)
 
     def UNARYOP(self, node):
         def evaluate(im):
-            return getattr(node.operand, self.EXPRESSIONS.get(type(node.op), "BOT"), GIVE_BOTTOM)(node.operand)
+            operand = self.interval_expressions.get(node.operand, GIVE_BOTTOM)(im)
+            return getattr(operand, self.EXPRESSIONS.get(type(node.op), "BOT"), GIVE_BOTTOM)()
         self.interval_expressions[node] = evaluate
         self.handleChildren(node)
 
@@ -1341,7 +1346,6 @@ class Checker(object):
     # Because True / False are named constants
     def NAMECONSTANT(self, node):
         self.interval_expressions[node] = lambda _im: Boolean(node.value)
-        print(self.interval_expressions[node])
 
     def IF(self, node):
         self.handleChildren(node)
@@ -1358,9 +1362,12 @@ class Checker(object):
                 test_interval = test_interval != Interval(0)
 
             if test_interval.equals(TRUE):
-                self.report(messages.DeadCode, node.test, "the condition always evaluates to true")
+                if len(node.orelse) == 0:
+                    self.report(messages.DeadCode, node.test, "condition " + astunparse.unparse(node.test).replace('\n', '') + " always evaluates to true")
+                else:
+                    self.report(messages.DeadCode, node.test, "part of the code is unreachable since " + astunparse.unparse(node.test).replace('\n', '') + " always evaluates to true")
             elif test_interval.equals(FALSE):
-                self.report(messages.DeadCode, node.test, "the condition always evaluates to false")
+                self.report(messages.DeadCode, node.test, "part of the code is unreachable since " + astunparse.unparse(node.test).replace('\n', '') + " always evaluates to false")
 
             # Determine own constraints
             for child in node.body:
@@ -1648,13 +1655,18 @@ class Checker(object):
                     intervals[x] = {}
 
                 original = dict()
+                algorithm_iteration_counter = 0
 
                 # "Straight-Forward" Algorithm
+                print("---- Function analysis ----")
                 while original != intervals:  # Continue applying constraints until fixed point has been reached
                     original = intervals.copy()
 
                     constraint_counter = 0
+                    algorithm_iteration_counter = algorithm_iteration_counter + 1
                     previous_interval = {}
+
+                    print("Iteration: " + str(algorithm_iteration_counter))
                     for child in iter_child_nodes(node, omit='decorator_list'):
 
                         #Xn = Xn-1[Xn]
@@ -1665,6 +1677,7 @@ class Checker(object):
                         #Print Xn
                         print(str(constraint_counter) + ". \"" + astunparse.unparse(child).replace('\n', '') + "\" -> " + str(intervals[child]))
                         constraint_counter += 1
+                print("-----------------------------\n\n")
 
             # DEBUG PRINTING
             #print("/--------- Constraints --------/")

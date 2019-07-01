@@ -100,7 +100,7 @@ class DivisionByZero(Message):
         self.message_args = ()
 
 class DeadCode(Message):
-    message = 'part of the code is unreachable since %r'
+    message = '%r'
 
     def __init__(self, filename, loc, name, position=None):
         Message.__init__(self, filename, loc)
