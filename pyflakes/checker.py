@@ -1363,7 +1363,7 @@ class Checker(object):
 
             if test_interval.equals(TRUE):
                 if len(node.orelse) == 0:
-                    self.report(messages.DeadCode, node.test, "condition " + astunparse.unparse(node.test).replace('\n', '') + " always evaluates to true")
+                    self.report(messages.DeadCode, node.test, "if statement is redundant since condition " + astunparse.unparse(node.test).replace('\n', '') + " always evaluates to true")
                 else:
                     self.report(messages.DeadCode, node.test, "part of the code is unreachable since " + astunparse.unparse(node.test).replace('\n', '') + " always evaluates to true")
             elif test_interval.equals(FALSE):
@@ -1658,7 +1658,7 @@ class Checker(object):
                 algorithm_iteration_counter = 0
 
                 # "Straight-Forward" Algorithm
-                print("---- Function analysis ----")
+                print("----- Function analysis -----")
                 while original != intervals:  # Continue applying constraints until fixed point has been reached
                     original = intervals.copy()
 

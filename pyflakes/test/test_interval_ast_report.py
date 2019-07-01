@@ -74,9 +74,9 @@ class TestIntervalASTReport(TestCase):
         def foo(arg: bool):
             a = False
             b = 1
-            if(arg):
+            if arg:
                 b = b + b
-            elif(a):
+            elif a:
                 b = b + b
         ''', m.DeadCode)
 
