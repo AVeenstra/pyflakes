@@ -1,7 +1,22 @@
+def bool_method(self, other, m):
+    assert isinstance(other, Boolean)
+    results = list(getattr(a, m)(b) for a in self for b in other)
+    return Boolean(*results)
+
+
 class Boolean:
     def __init__(self, *value):
-        assert all(isinstance(v, bool) for v in value)
-        self.value = set(value)
+        self.value = set()
+        self.unravel(value)
+
+    def unravel(self, value):
+        for v in value:
+            if isinstance(v, bool):
+                self.value.add(bool)
+            elif isinstance(v, Boolean):
+                self.value.update(v.value)
+            else:
+                self.unravel(v)
 
     def __str__(self):
         return str(self.value)
@@ -9,23 +24,30 @@ class Boolean:
     def __iter__(self):
         return self.value.__iter__()
 
-    def __neg__(self):
-        return Boolean()
-
     def __bool__(self):
+        if self.value == {True}:
+            return True
+        elif self.value == {False}:
+            return False
         raise Exception("Booleans can not be cast to Python bools")
 
-def get_method(m):
-    def apply(self, other):
-        assert isinstance(other, Boolean)
-        results = list(getattr(a, m)(b) for a in self for b in other)
-        return Boolean(*results)
+    def __eq__(self, other):
+        return bool_method(self, other, "__eq__")
 
-    return apply
+    def __ne__(self, other):
+        return bool_method(self, other, "__ne__")
 
+    def __and__(self, other):
+        return bool_method(self, other, "__and__")
 
-for method in ["__eq__", "__ne__", "__and__", "__or__", "__xor__"]:
-    setattr(Boolean, method, get_method(method))
+    def __or__(self, other):
+        return bool_method(self, other, "__or__")
+
+    def __xor__(self, other):
+        return bool_method(self, other, "__xor__")
+
+    def __invert__(self):
+        return Boolean(not v for v in self.value)
 
 
 BOOLEAN_TOP = Boolean(True, False)
@@ -35,5 +57,3 @@ BOOLEAN_BOTTOM = Boolean()
 
 GIVE_BOOLEAN_BOTTOM = lambda _x: BOOLEAN_BOTTOM
 GIVE_BOOLEAN_TOP = lambda _x: BOOLEAN_TOP
-
-
