@@ -1,4 +1,4 @@
-from pyflakes.boolean_lattice import Boolean, BOOLEAN_TOP
+from pyflakes.boolean_lattice import Boolean
 
 
 def interval_method(self, other, m):
@@ -196,11 +196,12 @@ class Interval(object):
         assert end is None if begin is None else isinstance(begin, (int, IntervalInt))
         assert not isinstance(begin, InfinityClass) or not isinstance(end, InfinityClass)
         assert not isinstance(begin, NegInfinityClass) or not isinstance(end, NegInfinityClass)
+        assert not isinstance(begin, bool)
 
         self.begin = IntervalInt(begin) if isinstance(begin, int) else begin
 
         if end is not None:
-            assert isinstance(end, (int, IntervalInt))
+            assert isinstance(end, (int, IntervalInt)) and not isinstance(end, bool)
             self.end = IntervalInt(end) if isinstance(end, int) else end
         else:
             assert not isinstance(begin, (InfinityClass, NegInfinityClass))
