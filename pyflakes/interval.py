@@ -23,6 +23,9 @@ class IntervalInt(object):
     def __eq__(self, other):
         return self.value == other.value
 
+    def __neg__(self):
+        return IntervalInt(-self.value)
+
     def __add__(self, other):
         if isinstance(other, InfinityClass) or isinstance(other, NegInfinityClass):
             return other
@@ -95,6 +98,9 @@ class InfinityClass(IntervalInt):
     def __eq__(self, other):
         return self is other
 
+    def __neg__(self):
+        return NEG_INFINITY
+
     def __add__(self, other):
         return self
 
@@ -117,23 +123,15 @@ class InfinityClass(IntervalInt):
         return "\u221E"
 
     def __gt__(self, other):
-        # if isinstance(other, InfinityClass):
-        #     return BOOLEAN_TOP
         return True
 
     def __ge__(self, other):
-        # if isinstance(other, InfinityClass):
-        #     return BOOLEAN_TOP
         return True
 
     def __lt__(self, other):
-        # if isinstance(other, InfinityClass):
-        #     return BOOLEAN_TOP
         return False
 
     def __le__(self, other):
-        # if isinstance(other, InfinityClass):
-        #     return BOOLEAN_TOP
         return False
 
 
@@ -143,6 +141,9 @@ class NegInfinityClass(IntervalInt):
 
     def __eq__(self, other):
         return self is other
+
+    def __neg__(self):
+        return INFINITY
 
     def __add__(self, other):
         return self
@@ -166,23 +167,15 @@ class NegInfinityClass(IntervalInt):
         return "-\u221E"
 
     def __gt__(self, other):
-        # if isinstance(other, InfinityClass):
-        #     return BOOLEAN_TOP
         return False
 
     def __ge__(self, other):
-        # if isinstance(other, InfinityClass):
-        #     return BOOLEAN_TOP
         return False
 
     def __lt__(self, other):
-        # if isinstance(other, InfinityClass):
-        #     return BOOLEAN_TOP
         return True
 
     def __le__(self, other):
-        # if isinstance(other, InfinityClass):
-        #     return BOOLEAN_TOP
         return True
 
 
@@ -252,6 +245,9 @@ class Interval(object):
         if self.end < other.begin or other.end < self.begin:
             return BOTTOM
         return Interval(max(self.begin, other.begin), min(self.end, other.end))
+
+    def __neg__(self):
+        return Interval(-self.end, -self.begin)
 
     def __add__(self, other):
         return interval_method(self, other, "__add__")
