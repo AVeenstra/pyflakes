@@ -110,7 +110,7 @@ class TestBuiltins(TestCase):
             a = True
             c = False
             b = 1
-            if(a & c):
+            if(a and c):
                 b = b + b
         ''', m.DeadCode)
 
@@ -120,7 +120,7 @@ class TestBuiltins(TestCase):
             a = True
             c = False
             b = 1
-            if(c | c | c | c | a):
+            if(c or c or c or c or a):
                 b = b + b
         ''', m.DeadCode)
 
@@ -168,7 +168,7 @@ class TestBuiltins(TestCase):
             if(a):
                 if(a):
                     b = b + b
-                elif(a & c):
+                elif(a and c):
                     b = b + b
         ''', m.DeadCode)
 
