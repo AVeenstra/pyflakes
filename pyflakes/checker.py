@@ -1357,7 +1357,7 @@ class Checker(object):
 
             # Perform checks on the test of the if.
             test_interval = self.interval_expressions.get(node.test, GIVE_BOTTOM)(im)
-            print("\t" + astunparse.unparse(node.test).replace('\n', '') + " -> " + str(test_interval))
+            print(" - cond. \"" + astunparse.unparse(node.test).rstrip("\n\r") + "\" -> " + str(test_interval))
             if isinstance(test_interval, Interval):
                 test_interval = test_interval != Interval(0)
 
@@ -1669,26 +1669,21 @@ class Checker(object):
                     print("Iteration: " + str(algorithm_iteration_counter))
                     for child in iter_child_nodes(node, omit='decorator_list'):
 
-                        #Xn = Xn-1[Xn]
+                        #Print Xn
+                        if type(child) is ast.If:
+                            print(str(constraint_counter) + ". \"\n" + astunparse.unparse(child).lstrip("\r\n").rstrip("\r\n") + "\n\"")
+                        else:
+                            print(str(constraint_counter) + ". \"" + astunparse.unparse(child).replace('\n', '') + "\"", end='')
+
+                        # Xn = Xn-1[Xn]
                         intervals[child].update(previous_interval)
                         intervals[child].update(self.interval_constraints.get(child, (lambda x: x.copy()))(intervals[child]))
                         previous_interval = intervals[child]
 
-                        #Print Xn
-                        print(str(constraint_counter) + ". \"" + astunparse.unparse(child).replace('\n', '') + "\" -> " + str(intervals[child]))
+                        #Print Xn result
+                        print(" -> " + str(intervals[child]))
                         constraint_counter += 1
                 print("-----------------------------\n\n")
-
-            # DEBUG PRINTING
-            #print("/--------- Constraints --------/")
-            #self.pprint_interval_constraints()
-            #print("\n\n")
-
-            #print("/--------- Expressions Constraints --------/")
-            #self.pprint_interval_expressions()
-
-            #print("/--------- Intervals --------/")
-            #self.pprint_intervals()
 
             self.deferAssignment(intervalAnalyses)
             self.popScope()
