@@ -54,3 +54,45 @@ class TestInterval(TestCase):
         self.assertEqual(Interval(1, 3) != Interval(1, 3), BOOLEAN_TOP)
         self.assertEqual(Interval(1, 2) != Interval(2, 3), BOOLEAN_TOP)
         self.assertEqual(Interval(1, 2) != Interval(3, 5), TRUE)
+
+    def test_infinity_comparators_report(self):
+        self.assertEqual(Interval(0, INFINITY) == Interval(0, INFINITY), TRUE)
+        self.assertEqual(Interval(NEG_INFINITY, 0) != Interval(0, INFINITY), TRUE)
+        self.assertEqual(Interval(0, INFINITY) > Interval(NEG_INFINITY, 0), TRUE)
+        self.assertEqual(Interval(0, INFINITY) >= Interval(NEG_INFINITY, 0), TRUE)
+        self.assertEqual(Interval(NEG_INFINITY, 0) < Interval(0, INFINITY), TRUE)
+        self.assertEqual(Interval(NEG_INFINITY, 0) <= Interval(0, INFINITY), TRUE)
+        self.assertEqual(Interval(0, INFINITY) > Interval(999999), TRUE)
+        self.assertEqual(Interval(0, INFINITY) >= Interval(999999), TRUE)
+        self.assertEqual(Interval(NEG_INFINITY, 0) < Interval(-999999), TRUE)
+        self.assertEqual(Interval(NEG_INFINITY, 0) <= Interval(-999999), TRUE)
+
+    def test_infinity_comparators_report_false(self):
+        self.assertEqual(Interval(0, INFINITY) != Interval(0, INFINITY), FALSE)
+        self.assertEqual(Interval(NEG_INFINITY, 0) == Interval(0, INFINITY), FALSE)
+        self.assertEqual(Interval(0, INFINITY) < Interval(NEG_INFINITY, 0), FALSE)
+        self.assertEqual(Interval(0, INFINITY) <= Interval(NEG_INFINITY, 0), FALSE)
+        self.assertEqual(Interval(NEG_INFINITY, 0) > Interval(0, INFINITY), FALSE)
+        self.assertEqual(Interval(NEG_INFINITY, 0) >= Interval(0, INFINITY), FALSE)
+        self.assertEqual(Interval(0, INFINITY) < Interval(999999), FALSE)
+        self.assertEqual(Interval(0, INFINITY) <= Interval(999999), FALSE)
+        self.assertEqual(Interval(NEG_INFINITY, 0) > Interval(-999999), FALSE)
+        self.assertEqual(Interval(NEG_INFINITY, 0) >= Interval(-999999), FALSE)
+
+    def test_TOP_comparators(self):
+        self.assertEqual(TOP >= Interval(1, 2), TOP)
+        self.assertEqual(TOP > Interval(1, 2), TOP)
+        self.assertEqual(TOP <= Interval(1, 2), TOP)
+        self.assertEqual(TOP < Interval(1, 2), TOP)
+        self.assertEqual(TOP == Interval(1, 2), TOP)
+        self.assertEqual(TOP != Interval(1, 2), TOP)
+        self.assertEqual(TOP == TOP, TRUE)
+
+    def test_BOTTOM_comparators(self):
+        self.assertEqual(BOTTOM >= Interval(1,2), BOTTOM)
+        self.assertEqual(BOTTOM > Interval(1, 2), BOTTOM)
+        self.assertEqual(BOTTOM <= Interval(1, 2), BOTTOM)
+        self.assertEqual(BOTTOM < Interval(1, 2), BOTTOM)
+        self.assertEqual(BOTTOM == Interval(1, 2), BOTTOM)
+        self.assertEqual(BOTTOM != Interval(1, 2), BOTTOM)
+        self.assertEqual(BOTTOM == BOTTOM, BOTTOM)
