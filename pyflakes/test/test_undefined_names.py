@@ -852,3 +852,4 @@ class NameTests(TestCase):
         # Make it into something unrecognizable.
         tree.body[0].targets[0].ctx = object()
         self.assertRaises(RuntimeError, checker.Checker, tree, file_tokens=file_tokens)
+
