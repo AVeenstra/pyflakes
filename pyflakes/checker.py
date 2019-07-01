@@ -1283,7 +1283,7 @@ class Checker(object):
     def ASSIGN(self, node):
         self.interval_constraints[node] = lambda im: dict(im, **{
             target.id: self.interval_expressions.get(node.value, GIVE_BOTTOM)(im)
-            for target in node.targets
+            for target in node.targets if hasattr(target, "id")
         })
         self.handleChildren(node)
 
@@ -1319,7 +1319,7 @@ class Checker(object):
     def NUM(self, node):
         self.interval_expressions[node] = lambda _im: Interval(node.n)
 
-    #Because True / False are named constants
+    # Because True / False are named constants
     def NAMECONSTANT(self, node):
         self.interval_expressions[node] = lambda _im: Boolean(node.value)
 
@@ -1345,15 +1345,15 @@ class Checker(object):
 
             # Determine own constraints
             for child in node.body:
-                im.update(self.interval_constraints[child](im))
+                im.update(self.interval_constraints.get(child, lambda x: x)(im))
 
             # Constraints of elif / else
             for child in node.orelse:
                 if type(child) is ast.If:
-                    orelse_intervals = self.interval_constraints[child](old_intervals.copy())
+                    orelse_intervals = self.interval_constraints.get(child, lambda x: x)(old_intervals.copy())
                     old_intervals = {}
                 else:
-                    orelse_intervals = self.interval_constraints[child](old_intervals.copy())
+                    orelse_intervals = self.interval_constraints.get(child, lambda x: x)(old_intervals.copy())
                     old_intervals = {}
 
             # Join with new/old intervals
@@ -1678,10 +1678,11 @@ class Checker(object):
                 self.addBinding(node, Argument(node.kwarg, scope_node))
 
     def ARG(self, node):
-        if node.annotation.id == 'int':
-            self.interval_expressions[node] = GIVE_TOP
-        elif node.annotation.id == 'bool':
-            self.interval_expressions[node] = GIVE_BOOLEAN_TOP
+        if hasattr(node.annotation, "id"):
+            if node.annotation.id == 'int':
+                self.interval_expressions[node] = GIVE_TOP
+            elif node.annotation.id == 'bool':
+                self.interval_expressions[node] = GIVE_BOOLEAN_TOP
         self.addBinding(node, Argument(node.arg, self.getScopeNode(node)))
 
     def CLASSDEF(self, node):
