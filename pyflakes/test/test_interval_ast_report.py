@@ -85,3 +85,98 @@ class TestBuiltins(TestCase):
             else:
                 b = b + b
         ''', m.DeadCode)
+
+    def test_dead_code_method(self):
+        self.flakes('''
+        def t():
+            return False
+        
+        def foo():
+            a = True
+            b = 1
+            if(t()):
+                b = b + b
+        ''', m.DeadCode)
+
+    def test_dead_code_and(self):
+        self.flakes('''
+        def foo():
+            a = True
+            c = False
+            b = 1
+            if(a & c):
+                b = b + b
+        ''', m.DeadCode)
+
+    def test_dead_code_or(self):
+        self.flakes('''
+        def foo():
+            a = True
+            c = False
+            b = 1
+            if(c | c | c | c | a):
+                b = b + b
+        ''', m.DeadCode)
+
+    def test_dead_code_equals(self):
+        self.flakes('''
+        def foo():
+            a = True
+            c = False
+            b = 1
+            if(c == a):
+                b = b + b
+        ''', m.DeadCode)
+
+    def test_dead_code_if_if(self):
+        self.flakes('''
+        def foo():
+            a = True
+            c = False
+            b = 1
+            if(a):
+                if(a):
+                    if(c):
+                        b = b + b
+        ''', m.DeadCode)
+
+    def test_dead_code_if_elif(self):
+        self.flakes('''
+        def foo():
+            a = True
+            c = False
+            b = 1
+            if(a):
+                if(a):
+                    b = b + b
+                elif(c):
+                    b = b + b
+        ''', m.DeadCode)
+
+    def test_dead_code_if_elif(self):
+        self.flakes('''
+        def foo():
+            a = True
+            c = False
+            b = 1
+            if(a):
+                if(a):
+                    b = b + b
+                elif(a & c):
+                    b = b + b
+        ''', m.DeadCode)
+
+    def test_dead_code_ifif(self):
+        self.flakes('''
+        def foo():
+            a = True
+            c = False
+            b = 1
+            if(a):
+                b = b + b
+            if(c):
+                b = b + b                        
+        ''', m.DeadCode)
+
+
+
