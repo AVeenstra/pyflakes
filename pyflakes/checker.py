@@ -1276,7 +1276,7 @@ class Checker(object):
 
     # same for operators
     AND = OR = ADD = SUB = MULT = DIV = MOD = POW = LSHIFT = RSHIFT = \
-        BITOR = BITXOR = BITAND = FLOORDIV = INVERT = NOT = UADD = USUB = \
+        BITOR = BITXOR = BITAND = FLOORDIV = INVERT = NOT = USUB = UADD = \
         EQ = NOTEQ = LT = LTE = GT = GTE = IS = ISNOT = IN = NOTIN = \
         MATMULT = ignore
 
@@ -1313,6 +1313,12 @@ class Checker(object):
                 right = self.interval_expressions.get(node.values[1], GIVE_BOTTOM)(im)
             return getattr(left, self.EXPRESSIONS.get(type(node.op), "BOT"), GIVE_BOTTOM)(right)
 
+        self.interval_expressions[node] = evaluate
+        self.handleChildren(node)
+
+    def UNARYOP(self, node):
+        def evaluate(im):
+            return getattr(node.operand, self.EXPRESSIONS.get(type(node.op), "BOT"), GIVE_BOTTOM)(node.operand)
         self.interval_expressions[node] = evaluate
         self.handleChildren(node)
 
@@ -1885,5 +1891,16 @@ class Checker(object):
                     (isinstance(left, literals) or isinstance(right, literals))):
                 self.report(messages.IsLiteral, node)
             left = right
+
+        def evaluate(im):
+            try:
+                left = self.interval_expressions.get(node.left, GIVE_BOTTOM)(im)
+                right = self.interval_expressions.get(node.comparators[0], GIVE_BOTTOM)(im) #Note: we assume one comperator for the moment TODO: more?
+                return getattr(left, self.EXPRESSIONS.get(type(node.ops[0]), "BOT"), GIVE_BOTTOM)(right)
+            except ZeroDivisionError as error:
+                self.report(messages.DivisionByZero, node)
+                return BOTTOM
+
+        self.interval_expressions[node] = evaluate
 
         self.handleChildren(node)
