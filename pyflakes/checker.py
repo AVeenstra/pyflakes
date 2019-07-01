@@ -20,7 +20,7 @@ import inspect
 
 from pyflakes import messages
 from pyflakes.interval import BOTTOM, GIVE_BOTTOM, GIVE_TOP, Interval, TOP
-from pyflakes.boolean_lattice import TRUE, FALSE, GIVE_BOOLEAN_TOP, GIVE_BOOLEAN_BOTTOM, BOOLEAN_BOTTOM, BOOLEAN_TOP
+from pyflakes.boolean_lattice import TRUE, FALSE, GIVE_BOOLEAN_TOP, GIVE_BOOLEAN_BOTTOM, BOOLEAN_BOTTOM, BOOLEAN_TOP, Boolean
 
 PY2 = sys.version_info < (3, 0)
 PY35_PLUS = sys.version_info >= (3, 5)    # Python 3.5 and above
@@ -1288,10 +1288,19 @@ class Checker(object):
         self.handleChildren(node)
 
     EXPRESSIONS = {
-        ast.Add: "__add__",
-        ast.Sub: "__sub__",
-        ast.Mult: "__mul__",
-        ast.FloorDiv: "__floordiv__",
+        ast.Add: "__add__",             #(a + b)
+        ast.Sub: "__sub__",             #(a - b)
+        ast.Mult: "__mul__",            #(a * b)
+        ast.FloorDiv: "__floordiv__",   #(a // b)
+        ast.Lt: "__lt__",               #(a < b)
+        ast.LtE: "__le__",              #(a <= b)
+        ast.Eq: "__eq__",               #(a == b)
+        ast.NotEq: "__ne__",            #(a != b)
+        ast.Gt: "__gt__",               #(a > b)
+        ast.GtE: "__ge__",              #(a >= b)
+        ast.USub: "__neg__",            #(-a) and (!a)
+        ast.And: "__rand__",            #(a & b)
+        ast.Or: "__ror__"               #(a | b)
     }
 
     def BINOP(self, node):
@@ -1312,13 +1321,24 @@ class Checker(object):
 
     #Because True / False are named constants
     def NAMECONSTANT(self, node):
-        self.interval_expressions[node] = lambda _im: Interval(node.value)
+        self.interval_expressions[node] = lambda _im: Boolean(node.value)
 
     def IF(self, node):
         self.handleChildren(node)
+        self.handleChildren(node.test)
+
         def evaluate(im):
-            old_intervals = im.copy() # Used when there is no else (and thus perhaps nothing will change)
-            orelse_intervals = {} # Intervals of elif or else
+            old_intervals = im.copy()  # Used when there is no else (and thus perhaps nothing will change)
+            orelse_intervals = {}  # Intervals of elif or else
+
+            # Perform checks on the test of the if.
+            test_interval = self.interval_expressions.get(node.test, GIVE_BOTTOM)(im)
+            if (test_interval == TRUE):
+                self.report(messages.DeadCode, node.test, str(node.test), str(True))
+                print("True branch of test was hit")
+            elif (test_interval == FALSE):
+                self.report(messages.DeadCode, node.test, str(node.test), str(True))
+                print("False branch of test was hit")
 
             # Determine own constraints
             for child in node.body:
@@ -1341,6 +1361,7 @@ class Checker(object):
                     im[interval] = orelse_intervals[interval].join(im[interval])
 
             return im
+
         self.interval_constraints[node] = evaluate
 
     def RAISE(self, node):
