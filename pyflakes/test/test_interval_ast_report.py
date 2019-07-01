@@ -112,6 +112,39 @@ class TestIntervalASTReport(TestCase):
                 b = b + b
         ''', m.DeadCode)
 
+    def test_dead_code_and2(self):
+        self.flakes('''
+        def foo():
+            a = True
+            c = False
+            c = a and c
+            b = 1
+            if c:
+                b = b + b
+        ''', m.DeadCode)
+
+    def test_dead_code_or2(self):
+        self.flakes('''
+        def foo():
+            a = True
+            c = False
+            c = c or c or c or c or a
+            b = 1
+            if c:
+                b = b + b
+        ''', m.DeadCode)
+
+    def test_dead_code_equals2(self):
+        self.flakes('''
+        def foo():
+            a = True
+            c = False
+            c = c == a
+            b = 1
+            if c:
+                b = b + b
+        ''', m.DeadCode)
+
     def test_dead_code_if_if(self):
         self.flakes('''
         def foo():
@@ -150,15 +183,47 @@ class TestIntervalASTReport(TestCase):
                     b = b + b
         ''', m.DeadCode, m.DeadCode, m.DeadCode)
 
-    def test_dead_code_ifif(self):
+    def test_dead_code_i_smaller(self):
         self.flakes('''
         def foo():
-            a = True
-            c = False
-            b = 1
-            if a:
+            a = 5
+            b = 6
+            if b < a:
                 b = b + b
-            if c:
+            if a < b:
+                b = b + b                        
+        ''', m.DeadCode, m.DeadCode)
+
+    def test_dead_code_i_greater(self):
+        self.flakes('''
+        def foo():
+            a = 5
+            b = 6
+            if b > a:
+                b = b + b
+            if a > b:
+                b = b + b                        
+        ''', m.DeadCode, m.DeadCode)
+
+    def test_dead_code_i_greater(self):
+        self.flakes('''
+        def foo():
+            a = 5
+            b = 6
+            if a == a:
+                b = b + b
+            if a == b:
+                b = b + b                        
+        ''', m.DeadCode, m.DeadCode)
+
+    def test_dead_code_i_greater(self):
+        self.flakes('''
+        def foo():
+            a = 5
+            b = 6
+            if a != a:
+                b = b + b
+            if a != b:
                 b = b + b                        
         ''', m.DeadCode, m.DeadCode)
 
@@ -180,3 +245,15 @@ class TestIntervalASTReport(TestCase):
             else:
                 b = b + b                     
         ''')
+
+    def test_dead_code_ifif(self):
+        self.flakes('''
+        def foo():
+            a = True
+            c = False
+            b = 1
+            if a:
+                b = b + b
+            if c:
+                b = b + b                        
+        ''', m.DeadCode, m.DeadCode)
