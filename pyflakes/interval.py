@@ -294,6 +294,9 @@ class Bottom(Interval):
     def __str__(self):
         return "⊥"
 
+    def __neg__(self):
+        return self
+
     def __add__(self, other):
         return self
 
