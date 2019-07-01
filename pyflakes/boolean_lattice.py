@@ -10,16 +10,30 @@ class Boolean:
         self.unravel(value)
 
     def unravel(self, value):
-        for v in value:
-            if isinstance(v, bool):
-                self.value.add(bool)
-            elif isinstance(v, Boolean):
-                self.value.update(v.value)
-            else:
-                self.unravel(v)
+        try:
+            for v in value:
+                if isinstance(v, bool):
+                    self.value.add(v)
+                elif isinstance(v, Boolean):
+                    self.value.update(v.value)
+                elif v is not None:
+                    self.unravel(v)
+        except Exception as e:
+            print("Value that caused an exception:", value)
+            raise e
+
+    def equals(self, other):
+        return self.value == other.value
+
+    def join(self, other):
+        assert isinstance(other, Boolean)
+        return Boolean(self.value, other.value)
 
     def __str__(self):
         return str(self.value)
+
+    def __repr__(self):
+        return str(self)
 
     def __iter__(self):
         return self.value.__iter__()

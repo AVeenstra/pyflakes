@@ -3,15 +3,14 @@ from pyflakes.boolean_lattice import TRUE, FALSE, BOOLEAN_TOP, BOOLEAN_BOTTOM
 from pyflakes.test.harness import TestCase
 
 
-class TestInterval(TestCase):
+class TestIntervalComparator(TestCase):
     def assertEqual(self, first: Interval, second: Interval, msg=...) -> None:
-        super(TestInterval, self).assertEqual(str(first), str(second), msg)
+        super(TestIntervalComparator, self).assertEqual(str(first), str(second), msg)
 
     def test_smaller(self):
         self.assertEqual(Interval(5) < Interval(6), TRUE)
         self.assertEqual(Interval(-1) < Interval(1), TRUE)
         self.assertEqual(Interval(0) < Interval(-1), FALSE)
-        self.assertEqual(Interval(-1) < Interval(1), FALSE)
         self.assertEqual(Interval(1) < Interval(1), FALSE)
 
     def test_smaller_interval(self):
@@ -22,15 +21,14 @@ class TestInterval(TestCase):
         self.assertEqual(Interval(3, 4) < Interval(2, 5), BOOLEAN_TOP)
 
     def test_greater(self):
-        self.assertEqual(Interval(5) > Interval(6), FALSE)
-        self.assertEqual(Interval(-1) > Interval(1), FALSE)
         self.assertEqual(Interval(0) > Interval(-1), TRUE)
-        self.assertEqual(Interval(-1) > Interval(1), TRUE)
+        self.assertEqual(Interval(-1) > Interval(1), FALSE)
+        self.assertEqual(Interval(5) > Interval(6), FALSE)
         self.assertEqual(Interval(1) > Interval(1), FALSE)
 
     def test_greater_interval(self):
-        self.assertEqual(Interval(1, 2) > Interval(5, 6), FALSE)
         self.assertEqual(Interval(5, 6) > Interval(1, 2), TRUE)
+        self.assertEqual(Interval(1, 2) > Interval(5, 6), FALSE)
         self.assertEqual(Interval(2, 5) > Interval(4, 6), BOOLEAN_TOP)
         self.assertEqual(Interval(2, 5) > Interval(3, 4), BOOLEAN_TOP)
         self.assertEqual(Interval(3, 4) > Interval(2, 5), BOOLEAN_TOP)
@@ -56,43 +54,44 @@ class TestInterval(TestCase):
         self.assertEqual(Interval(1, 2) != Interval(3, 5), TRUE)
 
     def test_infinity_comparators_report(self):
-        self.assertEqual(Interval(0, INFINITY) == Interval(0, INFINITY), TRUE)
-        self.assertEqual(Interval(NEG_INFINITY, 0) != Interval(0, INFINITY), TRUE)
-        self.assertEqual(Interval(0, INFINITY) > Interval(NEG_INFINITY, 0), TRUE)
+        self.assertEqual(Interval(0, INFINITY) == Interval(0, INFINITY), BOOLEAN_TOP)
+        self.assertEqual(Interval(NEG_INFINITY, 0) != Interval(1, INFINITY), TRUE)
+        self.assertEqual(Interval(0, INFINITY) > Interval(NEG_INFINITY, -1), TRUE)
         self.assertEqual(Interval(0, INFINITY) >= Interval(NEG_INFINITY, 0), TRUE)
-        self.assertEqual(Interval(NEG_INFINITY, 0) < Interval(0, INFINITY), TRUE)
+        self.assertEqual(Interval(NEG_INFINITY, 0) < Interval(1, INFINITY), TRUE)
         self.assertEqual(Interval(NEG_INFINITY, 0) <= Interval(0, INFINITY), TRUE)
-        self.assertEqual(Interval(0, INFINITY) > Interval(999999), TRUE)
-        self.assertEqual(Interval(0, INFINITY) >= Interval(999999), TRUE)
-        self.assertEqual(Interval(NEG_INFINITY, 0) < Interval(-999999), TRUE)
-        self.assertEqual(Interval(NEG_INFINITY, 0) <= Interval(-999999), TRUE)
+        self.assertEqual(Interval(0, INFINITY) > Interval(999999), BOOLEAN_TOP)
+        self.assertEqual(Interval(0, INFINITY) >= Interval(999999), BOOLEAN_TOP)
+        self.assertEqual(Interval(NEG_INFINITY, 0) < Interval(-999999), BOOLEAN_TOP)
+        self.assertEqual(Interval(NEG_INFINITY, 0) <= Interval(-999999), BOOLEAN_TOP)
 
     def test_infinity_comparators_report_false(self):
-        self.assertEqual(Interval(0, INFINITY) != Interval(0, INFINITY), FALSE)
-        self.assertEqual(Interval(NEG_INFINITY, 0) == Interval(0, INFINITY), FALSE)
+        self.assertEqual(Interval(0, INFINITY) != Interval(0, INFINITY), BOOLEAN_TOP)
+        self.assertEqual(Interval(0) != Interval(0), FALSE)
+        self.assertEqual(Interval(NEG_INFINITY, 0) == Interval(1, INFINITY), FALSE)
         self.assertEqual(Interval(0, INFINITY) < Interval(NEG_INFINITY, 0), FALSE)
-        self.assertEqual(Interval(0, INFINITY) <= Interval(NEG_INFINITY, 0), FALSE)
+        self.assertEqual(Interval(1, INFINITY) <= Interval(NEG_INFINITY, 0), FALSE)
         self.assertEqual(Interval(NEG_INFINITY, 0) > Interval(0, INFINITY), FALSE)
-        self.assertEqual(Interval(NEG_INFINITY, 0) >= Interval(0, INFINITY), FALSE)
-        self.assertEqual(Interval(0, INFINITY) < Interval(999999), FALSE)
-        self.assertEqual(Interval(0, INFINITY) <= Interval(999999), FALSE)
-        self.assertEqual(Interval(NEG_INFINITY, 0) > Interval(-999999), FALSE)
-        self.assertEqual(Interval(NEG_INFINITY, 0) >= Interval(-999999), FALSE)
+        self.assertEqual(Interval(NEG_INFINITY, 0) >= Interval(1, INFINITY), FALSE)
+        self.assertEqual(Interval(0, INFINITY) < Interval(-1), FALSE)
+        self.assertEqual(Interval(0, INFINITY) <= Interval(-1), FALSE)
+        self.assertEqual(Interval(NEG_INFINITY, 0) > Interval(1), FALSE)
+        self.assertEqual(Interval(NEG_INFINITY, 0) >= Interval(1), FALSE)
 
     def test_TOP_comparators(self):
-        self.assertEqual(TOP >= Interval(1, 2), TOP)
-        self.assertEqual(TOP > Interval(1, 2), TOP)
-        self.assertEqual(TOP <= Interval(1, 2), TOP)
-        self.assertEqual(TOP < Interval(1, 2), TOP)
-        self.assertEqual(TOP == Interval(1, 2), TOP)
-        self.assertEqual(TOP != Interval(1, 2), TOP)
-        self.assertEqual(TOP == TOP, TRUE)
+        self.assertEqual(TOP >= Interval(1, 2), BOOLEAN_TOP)
+        self.assertEqual(TOP > Interval(1, 2), BOOLEAN_TOP)
+        self.assertEqual(TOP <= Interval(1, 2), BOOLEAN_TOP)
+        self.assertEqual(TOP < Interval(1, 2), BOOLEAN_TOP)
+        self.assertEqual(TOP == Interval(1, 2), BOOLEAN_TOP)
+        self.assertEqual(TOP != Interval(1, 2), BOOLEAN_TOP)
+        self.assertEqual(TOP == TOP, BOOLEAN_TOP)
 
     def test_BOTTOM_comparators(self):
-        self.assertEqual(BOTTOM >= Interval(1,2), BOTTOM)
-        self.assertEqual(BOTTOM > Interval(1, 2), BOTTOM)
-        self.assertEqual(BOTTOM <= Interval(1, 2), BOTTOM)
-        self.assertEqual(BOTTOM < Interval(1, 2), BOTTOM)
-        self.assertEqual(BOTTOM == Interval(1, 2), BOTTOM)
-        self.assertEqual(BOTTOM != Interval(1, 2), BOTTOM)
-        self.assertEqual(BOTTOM == BOTTOM, BOTTOM)
+        self.assertEqual(BOTTOM >= Interval(1,2), BOOLEAN_BOTTOM)
+        self.assertEqual(BOTTOM > Interval(1, 2), BOOLEAN_BOTTOM)
+        self.assertEqual(BOTTOM <= Interval(1, 2), BOOLEAN_BOTTOM)
+        self.assertEqual(BOTTOM < Interval(1, 2), BOOLEAN_BOTTOM)
+        self.assertEqual(BOTTOM == Interval(1, 2), BOOLEAN_BOTTOM)
+        self.assertEqual(BOTTOM != Interval(1, 2), BOOLEAN_BOTTOM)
+        self.assertEqual(BOTTOM == BOTTOM, BOOLEAN_BOTTOM)
