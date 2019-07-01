@@ -1333,10 +1333,13 @@ class Checker(object):
 
             # Perform checks on the test of the if.
             test_interval = self.interval_expressions.get(node.test, GIVE_BOTTOM)(im)
-            if (test_interval == TRUE):
+            if isinstance(test_interval, Interval):
+                test_interval = test_interval != Interval(0)
+
+            if test_interval.equals(TRUE):
                 self.report(messages.DeadCode, node.test, str(node.test), str(True))
                 print("True branch of test was hit")
-            elif (test_interval == FALSE):
+            elif test_interval.equals(FALSE):
                 self.report(messages.DeadCode, node.test, str(node.test), str(True))
                 print("False branch of test was hit")
 
