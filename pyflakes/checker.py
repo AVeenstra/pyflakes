@@ -1298,10 +1298,23 @@ class Checker(object):
         ast.NotEq: "__ne__",            #(a != b)
         ast.Gt: "__gt__",               #(a > b)
         ast.GtE: "__ge__",              #(a >= b)
-        ast.USub: "__neg__",            #(-a) and (!a)
-        ast.And: "__rand__",            #(a & b)
-        ast.Or: "__ror__"               #(a | b)
+        ast.USub: "__neg__",            #(-a)
+        ast.Not: "__neg__",             #(not a)
+        ast.And: "__and__",             #(a and b)
+        ast.Or: "__or__"                #(a or b)
     }
+
+    def BOOLOP(self, node):
+        def evaluate(im):
+            if(len(node.values) == 1):
+                return getattr(node.values[0], self.EXPRESSIONS.get(type(node.op), "BOT"), GIVE_BOTTOM)(node.values[0])
+            elif(len(node.values) == 2):
+                left = self.interval_expressions.get(node.values[0], GIVE_BOTTOM)(im)
+                right = self.interval_expressions.get(node.values[1], GIVE_BOTTOM)(im)
+            return getattr(left, self.EXPRESSIONS.get(type(node.op), "BOT"), GIVE_BOTTOM)(right)
+
+        self.interval_expressions[node] = evaluate
+        self.handleChildren(node)
 
     def BINOP(self, node):
         def evaluate(im):
@@ -1322,6 +1335,7 @@ class Checker(object):
     # Because True / False are named constants
     def NAMECONSTANT(self, node):
         self.interval_expressions[node] = lambda _im: Boolean(node.value)
+        print(self.interval_expressions[node])
 
     def IF(self, node):
         self.handleChildren(node)
@@ -1333,15 +1347,14 @@ class Checker(object):
 
             # Perform checks on the test of the if.
             test_interval = self.interval_expressions.get(node.test, GIVE_BOTTOM)(im)
+            print("\t" + astunparse.unparse(node.test).replace('\n', '') + " -> " + str(test_interval))
             if isinstance(test_interval, Interval):
                 test_interval = test_interval != Interval(0)
 
             if test_interval.equals(TRUE):
-                self.report(messages.DeadCode, node.test, str(node.test), str(True))
-                print("True branch of test was hit")
+                self.report(messages.DeadCode, node.test, "the condition always evaluates to true")
             elif test_interval.equals(FALSE):
-                self.report(messages.DeadCode, node.test, str(node.test), str(True))
-                print("False branch of test was hit")
+                self.report(messages.DeadCode, node.test, "the condition always evaluates to false")
 
             # Determine own constraints
             for child in node.body:
@@ -1666,7 +1679,7 @@ class Checker(object):
     def ARGUMENTS(self, node):
         self.handleChildren(node, omit=('defaults', 'kw_defaults'))
         self.interval_constraints[node] = lambda im: dict(im, **{
-            argument.arg: self.interval_expressions.get(argument.arg, GIVE_TOP)(im)
+            argument.arg: self.interval_expressions.get(argument, GIVE_TOP)(im)
             for argument in node.args
         })
 
