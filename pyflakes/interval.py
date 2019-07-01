@@ -1,4 +1,4 @@
-from pyflakes.boolean_lattice import Boolean
+from pyflakes.boolean_lattice import Boolean, BOOLEAN_TOP
 
 
 def interval_method(self, other, m):
@@ -19,16 +19,6 @@ def bool_method(self, other, m):
 class IntervalInt(object):
     def __init__(self, value):
         self.value = value
-
-    def __lt__(self, other):
-        if isinstance(other, NegInfinityClass):
-            return False
-        return isinstance(other, InfinityClass) or self.value < other.value
-
-    def __le__(self, other):
-        if isinstance(other, NegInfinityClass):
-            return False
-        return isinstance(other, InfinityClass) or self.value <= other.value
 
     def __eq__(self, other):
         return self.value == other.value
@@ -73,25 +63,37 @@ class IntervalInt(object):
     def __repr__(self):
         return str(self)
 
+    def __gt__(self, other):
+        if isinstance(other, InfinityClass):
+            return False
+        if isinstance(other, NegInfinityClass):
+            return True
+        return self.value > other.value
+
+    def __ge__(self, other):
+        if isinstance(other, InfinityClass):
+            return False
+        if isinstance(other, NegInfinityClass):
+            return True
+        return self.value >= other.value
+
+    def __lt__(self, other):
+        if isinstance(other, NegInfinityClass):
+            return False
+        return isinstance(other, InfinityClass) or self.value < other.value
+
+    def __le__(self, other):
+        if isinstance(other, NegInfinityClass):
+            return False
+        return isinstance(other, InfinityClass) or self.value <= other.value
+
 
 class InfinityClass(IntervalInt):
     def __init__(self):
         super(InfinityClass, self).__init__(None)
 
-    def __lt__(self, other):
-        return False
-
-    def __gt__(self, other):
-        return True
-
     def __eq__(self, other):
         return self is other
-
-    def __le__(self, other):
-        return self is other
-
-    def __ge__(self, other):
-        return True
 
     def __add__(self, other):
         return self
@@ -114,24 +116,32 @@ class InfinityClass(IntervalInt):
     def __str__(self):
         return "\u221E"
 
+    def __gt__(self, other):
+        # if isinstance(other, InfinityClass):
+        #     return BOOLEAN_TOP
+        return True
+
+    def __ge__(self, other):
+        # if isinstance(other, InfinityClass):
+        #     return BOOLEAN_TOP
+        return True
+
+    def __lt__(self, other):
+        # if isinstance(other, InfinityClass):
+        #     return BOOLEAN_TOP
+        return False
+
+    def __le__(self, other):
+        # if isinstance(other, InfinityClass):
+        #     return BOOLEAN_TOP
+        return False
+
 
 class NegInfinityClass(IntervalInt):
     def __init__(self):
         super(NegInfinityClass, self).__init__(None)
 
-    def __lt__(self, other):
-        return True
-
-    def __gt__(self, other):
-        return False
-
     def __eq__(self, other):
-        return self is other
-
-    def __le__(self, other):
-        return True
-
-    def __ge__(self, other):
         return self is other
 
     def __add__(self, other):
@@ -155,6 +165,26 @@ class NegInfinityClass(IntervalInt):
     def __str__(self):
         return "-\u221E"
 
+    def __gt__(self, other):
+        # if isinstance(other, InfinityClass):
+        #     return BOOLEAN_TOP
+        return False
+
+    def __ge__(self, other):
+        # if isinstance(other, InfinityClass):
+        #     return BOOLEAN_TOP
+        return False
+
+    def __lt__(self, other):
+        # if isinstance(other, InfinityClass):
+        #     return BOOLEAN_TOP
+        return True
+
+    def __le__(self, other):
+        # if isinstance(other, InfinityClass):
+        #     return BOOLEAN_TOP
+        return True
+
 
 ZERO_INT = IntervalInt(0)
 INFINITY = InfinityClass()
@@ -176,7 +206,7 @@ class Interval(object):
             assert not isinstance(begin, (InfinityClass, NegInfinityClass))
             self.end = self.begin
 
-        assert self.begin <= self.end
+        assert all(Boolean(self.begin <= self.end))
 
     def debug_checks(self, other):
         assert isinstance(other, Interval)
@@ -188,15 +218,6 @@ class Interval(object):
         yield self.begin
         yield self.end
 
-    def __eq__(self, other):
-        self.debug_checks(other)
-        if isinstance(other, Bottom):
-            return other
-        return Boolean(
-            self.begin == other.begin == self.end == other.end,
-            self.begin <= other.end and other.begin <= self.end,
-        )
-
     def equals(self, other):
         return self.begin == other.begin and self.end == other.end
 
@@ -205,10 +226,6 @@ class Interval(object):
 
     def __repr__(self):
         return str(self)
-
-    def __ne__(self, other):
-        self.debug_checks(other)
-        return ~(self == other)
 
     def __floordiv__(self, other):
         self.debug_checks(other)
@@ -244,6 +261,19 @@ class Interval(object):
     def __mul__(self, other):
         return interval_method(self, other, "__mul__")
 
+    def __eq__(self, other):
+        self.debug_checks(other)
+        if isinstance(other, Bottom):
+            return other
+        return Boolean(
+            self.begin == other.begin == self.end == other.end,
+            self.begin <= other.end and other.begin <= self.end,
+        )
+
+    def __ne__(self, other):
+        self.debug_checks(other)
+        return ~(self == other)
+
     def __gt__(self, other):
         return bool_method(self, other, "__gt__")
 
@@ -258,7 +288,6 @@ class Interval(object):
 
 
 class Bottom(Interval):
-    # TODO implement this
     def __init__(self):
         super(Bottom, self).__init__(0, 0)
 
