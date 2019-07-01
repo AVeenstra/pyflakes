@@ -50,10 +50,16 @@ class TestBuiltins(TestCase):
         self.flakes('''
         def min(arg: int):
             return arg - 1
-        
+
         def foo():
             1 // min(1)
         ''', m.DivisionByZero)
+
+    def test_no_divide_by_zero(self):
+        self.flakes('''
+        def foo(arg: int):
+            1 // arg
+        ''')
 
     def test_dead_code_if(self):
         self.flakes('''
@@ -178,5 +184,22 @@ class TestBuiltins(TestCase):
                 b = b + b                        
         ''', m.DeadCode)
 
+    def test_no_dead_code_if(self):
+        self.flakes('''
+        def foo():
+            a = True
+            b = 1
+            if(a):
+                b = b + b                     
+        ''')
 
+    def test_no_dead_code_if_else(self):
+        self.flakes('''
+        def foo(arg:bool):
+            b = 1
+            if(arg):
+                b = b + b
+            else:
+                b = b + b                     
+        ''')
 
