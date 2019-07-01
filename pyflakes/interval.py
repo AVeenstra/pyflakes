@@ -1,4 +1,4 @@
-from pyflakes.boolean_lattice import Boolean
+from pyflakes.boolean_lattice import Boolean, BOOLEAN_BOTTOM
 
 
 def interval_method(self, other, m):
@@ -210,7 +210,7 @@ class Interval(object):
         assert all(Boolean(self.begin <= self.end))
 
     def debug_checks(self, other):
-        assert isinstance(other, Interval)
+        assert isinstance(other, Interval), "Expecting Interval to do this operator"
 
     def is_none(self):
         return self.begin is None
@@ -298,7 +298,12 @@ class Bottom(Interval):
     def __add__(self, other):
         return self
 
-    __sub__ = __mul__ = __gt__ = __ge__ = __lt__ = __le__ = __eq__ = __floordiv__ = __add__
+    __sub__ = __mul__ = __floordiv__ = __add__
+
+    def __gt__(self, other):
+        return BOOLEAN_BOTTOM
+
+    __ge__ = __lt__ = __le__ = __eq__ = __gt__
 
 
 ZERO = Interval(ZERO_INT)

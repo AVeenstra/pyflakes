@@ -11,7 +11,6 @@ class TestInterval(TestCase):
         self.assertEqual(Interval(5) < Interval(6), TRUE)
         self.assertEqual(Interval(-1) < Interval(1), TRUE)
         self.assertEqual(Interval(0) < Interval(-1), FALSE)
-        self.assertEqual(Interval(-1) < Interval(1), FALSE)
         self.assertEqual(Interval(1) < Interval(1), FALSE)
 
     def test_smaller_interval(self):
@@ -22,15 +21,14 @@ class TestInterval(TestCase):
         self.assertEqual(Interval(3, 4) < Interval(2, 5), BOOLEAN_TOP)
 
     def test_greater(self):
-        self.assertEqual(Interval(5) > Interval(6), FALSE)
-        self.assertEqual(Interval(-1) > Interval(1), FALSE)
         self.assertEqual(Interval(0) > Interval(-1), TRUE)
-        self.assertEqual(Interval(-1) > Interval(1), TRUE)
+        self.assertEqual(Interval(-1) > Interval(1), FALSE)
+        self.assertEqual(Interval(5) > Interval(6), FALSE)
         self.assertEqual(Interval(1) > Interval(1), FALSE)
 
     def test_greater_interval(self):
-        self.assertEqual(Interval(1, 2) > Interval(5, 6), FALSE)
         self.assertEqual(Interval(5, 6) > Interval(1, 2), TRUE)
+        self.assertEqual(Interval(1, 2) > Interval(5, 6), FALSE)
         self.assertEqual(Interval(2, 5) > Interval(4, 6), BOOLEAN_TOP)
         self.assertEqual(Interval(2, 5) > Interval(3, 4), BOOLEAN_TOP)
         self.assertEqual(Interval(3, 4) > Interval(2, 5), BOOLEAN_TOP)
