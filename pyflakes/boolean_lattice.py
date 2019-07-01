@@ -16,7 +16,7 @@ class Boolean:
                     self.value.add(v)
                 elif isinstance(v, Boolean):
                     self.value.update(v.value)
-                else:
+                elif v is not None:
                     self.unravel(v)
         except Exception as e:
             print("Value that caused an exception:", value)

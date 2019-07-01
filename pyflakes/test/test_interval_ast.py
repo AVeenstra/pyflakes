@@ -43,7 +43,7 @@ class TestBuiltins(TestCase):
                 if(arg):
                     a = 0
             foo(0)
-        ''')
+        ''', m.UnusedVariable)
 
     def test_no_args(self):
         self.flakes('''
