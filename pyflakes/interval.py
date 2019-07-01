@@ -249,6 +249,9 @@ class Interval(object):
     def __neg__(self):
         return Interval(-self.end, -self.begin)
 
+    def __invert__(self):
+        return Interval(-self.end, -self.begin)
+
     def __add__(self, other):
         return interval_method(self, other, "__add__")
 
