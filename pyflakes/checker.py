@@ -1345,7 +1345,7 @@ class Checker(object):
 
     # Because True / False are named constants
     def NAMECONSTANT(self, node):
-        self.interval_expressions[node] = lambda _im: Boolean(node.value)
+        self.interval_expressions[node] = lambda _im: Boolean(node.value)  # None is taken care of in Boolean(x)
 
     def IF(self, node):
         self.handleChildren(node)
@@ -1903,7 +1903,7 @@ class Checker(object):
         def evaluate(im):
             try:
                 left = self.interval_expressions.get(node.left, GIVE_BOTTOM)(im)
-                right = self.interval_expressions.get(node.comparators[0], GIVE_BOTTOM)(im) #Note: we assume one comperator for the moment TODO: more?
+                right = self.interval_expressions.get(node.comparators[0], GIVE_BOTTOM)(im)  # We assume one comperator for the moment
                 return getattr(left, self.EXPRESSIONS.get(type(node.ops[0]), "BOT"), GIVE_BOTTOM)(right)
             except ZeroDivisionError as error:
                 self.report(messages.DivisionByZero, node)
