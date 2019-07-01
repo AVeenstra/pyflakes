@@ -6,26 +6,6 @@ from pyflakes import messages as m
 
 
 class TestIntervalAST(TestCase):
-    def test_basic_method(self):
-        self.flakes('''
-            def foo(arg: bool):
-                arg = True
-                arg = False
-                a = 42
-                b = a + 7
-                c = a // 0
-                if arg:
-                    a = a + 2
-                elif false:
-                    a = a + 3
-                elif true:
-                    a = a + 4
-                else:
-                    a = a + 5
-                return a
-            foo(true)
-        ''')
-
     def test_basic_method_args(self):
             self.flakes('''
             def foo(arg: int):
@@ -40,7 +20,7 @@ class TestIntervalAST(TestCase):
             def foo(arg: bool):
                 a = 42
                 b = a + 7
-                if(arg):
+                if arg:
                     a = 0
             foo(0)
         ''', m.UnusedVariable)
@@ -82,7 +62,7 @@ class TestIntervalAST(TestCase):
         def foo():
             y = 1
             x = 1
-            y = x // (y-x)
+            y = x // (y - x)
         ''', m.DivisionByZero)
 
     def test_divide_by_zero_floor(self):

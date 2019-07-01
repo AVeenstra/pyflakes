@@ -1,8 +1,8 @@
 """
 Tests for detecting redefinition of builtins.
 """
-from pyflakes.test.harness import TestCase
 from pyflakes import messages as m
+from pyflakes.test.harness import TestCase
 
 
 class TestIntervalASTReport(TestCase):
@@ -27,7 +27,7 @@ class TestIntervalASTReport(TestCase):
         def foo():
             y = 1
             x = 1
-            y = x // (y-x)
+            y = x // (y - x)
         ''', m.DivisionByZero)
 
     def test_divide_by_zero_multiplication(self):
@@ -45,15 +45,6 @@ class TestIntervalASTReport(TestCase):
             y = x // (y // x)
         ''', m.DivisionByZero)
 
-    # def test_divide_by_zero_method(self):
-    #     self.flakes('''
-    #     def min(arg: int):
-    #         return arg - 1
-    #
-    #     def foo():
-    #         1 // min(1)
-    #     ''', m.DivisionByZero)
-
     def test_no_divide_by_zero(self):
         self.flakes('''
         def foo(arg: int):
@@ -65,7 +56,7 @@ class TestIntervalASTReport(TestCase):
         def foo():
             a = False
             b = 1
-            if(a):
+            if a:
                 b = b + b
         ''', m.DeadCode)
 
@@ -85,24 +76,11 @@ class TestIntervalASTReport(TestCase):
         def foo():
             a = True
             b = 1
-            if(a):
+            if a:
                 b = b + b
             else:
                 b = b + b
         ''', m.DeadCode)
-
-
-    # def test_dead_code_method(self):
-    #     self.flakes('''
-    #     def t():
-    #         return False
-    #
-    #     def foo():
-    #         a = True
-    #         b = 1
-    #         if(t()):
-    #             b = b + b
-    #     ''', m.DeadCode)
 
     def test_dead_code_and(self):
         self.flakes('''
@@ -110,7 +88,7 @@ class TestIntervalASTReport(TestCase):
             a = True
             c = False
             b = 1
-            if(a and c):
+            if a and c:
                 b = b + b
         ''', m.DeadCode)
 
@@ -120,7 +98,7 @@ class TestIntervalASTReport(TestCase):
             a = True
             c = False
             b = 1
-            if(c or c or c or c or a):
+            if c or c or c or c or a:
                 b = b + b
         ''', m.DeadCode)
 
@@ -130,7 +108,7 @@ class TestIntervalASTReport(TestCase):
             a = True
             c = False
             b = 1
-            if(c == a):
+            if c == a:
                 b = b + b
         ''', m.DeadCode)
 
@@ -140,23 +118,10 @@ class TestIntervalASTReport(TestCase):
             a = True
             c = False
             b = 1
-            if(a):
-                if(a):
-                    if(c):
+            if a:
+                if a:
+                    if c:
                         b = b + b
-        ''', m.DeadCode,m.DeadCode,m.DeadCode)
-
-    def test_dead_code_if_elif(self):
-        self.flakes('''
-        def foo():
-            a = True
-            c = False
-            b = 1
-            if(a):
-                if(a):
-                    b = b + b
-                elif(c):
-                    b = b + b
         ''', m.DeadCode, m.DeadCode, m.DeadCode)
 
     def test_dead_code_if_elif(self):
@@ -165,10 +130,23 @@ class TestIntervalASTReport(TestCase):
             a = True
             c = False
             b = 1
-            if(a):
-                if(a):
+            if a:
+                if a:
                     b = b + b
-                elif(a and c):
+                elif c:
+                    b = b + b
+        ''', m.DeadCode, m.DeadCode, m.DeadCode)
+
+    def test_dead_code_if_elif_alt(self):
+        self.flakes('''
+        def foo():
+            a = True
+            c = False
+            b = 1
+            if a:
+                if a:
+                    b = b + b
+                elif a and c:
                     b = b + b
         ''', m.DeadCode, m.DeadCode, m.DeadCode)
 
@@ -178,9 +156,9 @@ class TestIntervalASTReport(TestCase):
             a = True
             c = False
             b = 1
-            if(a):
+            if a:
                 b = b + b
-            if(c):
+            if c:
                 b = b + b                        
         ''', m.DeadCode, m.DeadCode)
 
@@ -189,7 +167,7 @@ class TestIntervalASTReport(TestCase):
         def foo():
             a = True
             b = 1
-            if(a):
+            if a:
                 b = b + b                     
         ''', m.DeadCode)
 
@@ -197,9 +175,8 @@ class TestIntervalASTReport(TestCase):
         self.flakes('''
         def foo(arg:bool):
             b = 1
-            if(arg):
+            if arg:
                 b = b + b
             else:
                 b = b + b                     
         ''')
-
