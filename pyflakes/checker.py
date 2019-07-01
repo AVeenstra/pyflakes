@@ -1262,7 +1262,7 @@ class Checker(object):
     PASS = ignore
 
     # "expr" type nodes
-    BOOLOP = UNARYOP = IFEXP = SET = \
+    IFEXP = SET = \
         CALL = REPR = ATTRIBUTE = SUBSCRIPT = \
         STARRED = handleChildren
 
